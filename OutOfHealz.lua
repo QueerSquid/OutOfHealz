@@ -6,7 +6,11 @@ local RangeCheck = LibStub("LibRangeCheck-3.0")
 
 local lastState = nil
 local lastCheck = 0
-local interval = 1
+local interval = 0.25
+
+local cookieSound = "Interface\\AddOns\\OutOfHealz\\Media\\cookie_nom_warning.ogg"
+local lastSoundTime = 0
+local soundCooldown = 6
 
 local warningFrame = CreateFrame("Frame", "OutOfHealzWarningFrame", UIParent)
 warningFrame:SetSize(700, 120)
@@ -107,5 +111,14 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         end
 
         lastState = currentState
+    end
+
+    if currentState == "OUT OF HEAL RANGE" then
+        local soundNow = GetTime()
+
+        if soundNow - lastSoundTime >= soundCooldown then
+            PlaySoundFile(cookieSound, "Master")
+            lastSoundTime = soundNow
+        end
     end
 end)
