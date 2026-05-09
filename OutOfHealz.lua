@@ -122,3 +122,23 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         end
     end
 end)
+
+SLASH_OUTOFHEALZ1 = "/outofhealz"
+SLASH_OUTOFHEALZ2 = "/ooh"
+
+SlashCmdList["OUTOFHEALZ"] = function(msg)
+    msg = string.lower(strtrim(msg or ""))
+
+    if msg == "test" then
+        warningFrame:Show()
+        PlaySoundFile(cookieSound, "Master")
+        print("|cff00ff00OutOfHealz:|r Test warning shown.")
+    elseif msg == "hide" then
+        warningFrame:Hide()
+        print("|cff00ff00OutOfHealz:|r Warning hidden.")
+    else
+        print("|cff00ff00OutOfHealz commands:|r")
+        print("/ooh test - Show warning and play sound")
+        print("/ooh hide - Hide warning")
+    end
+end
