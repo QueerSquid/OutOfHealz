@@ -9,6 +9,8 @@ local lastState = nil
 local lastCheck = 0
 local interval = 0.25
 
+local outOfRangeStartTime = nil
+
 local isFrameUnlocked = false
 
 local cookieSound = "Interface\\AddOns\\OutOfHealz\\Media\\cookie_nom_warning.ogg"
@@ -129,6 +131,29 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         currentState = "HEALER IN RANGE"
     else
         currentState = "OUT OF HEAL RANGE"
+    end
+
+    if currentState == "OUT OF HEAL RANGE" then
+        if not outOfRangeStartTime then
+            outOfRangeStartTime = GetTime()
+        end
+
+        local outTime = GetTime() - outOfRangeStartTime
+        local warningMessage = "OUT OF HEAL RANGE"
+
+        if outTime >= 12 then
+            warningMessage = "IF YOU DIE, IT'S YOUR FUALT"
+        elseif outTime >= 6 then
+            warningMessage = "STILL OUT OF HEAL RANGE"
+        end
+
+        outlineText:SetText(warningMessage)
+        warningText:SetText(warningMessage)
+    else
+        outOfRangeStartTime = nil
+
+        outlineText:SetText("OUT OF HEAL RANGE")
+        warningText:SetText("OUT OF HEAL RANGE")
     end
 
     if currentState ~= lastState then
