@@ -17,6 +17,7 @@ The addon monitors healer proximity in real time during combat and provides both
 * Healer role detection
 * LibRangeCheck-3.0 integration for combat-safe range detection
 * Draggable warning frame
+* Persistent saved frame positioning
 * Slash command support
 * Frame reset support
 
@@ -59,14 +60,14 @@ World of Warcraft/_retail_/Interface/AddOns/
 
 OutOfHealz is currently in active development and testing.
 
-The addon is functional and combat-tested, but additional polish and customization options are still planned before public release.
+The addon is functional and combat-tested, with persistent frame positioning, custom sound support, and combat-safe healer range detection currently implemented. Additional polish and customization options are still planned before public release.
 
 ---
 
 # Planned Features
 
 * Instance-only filtering
-* Saved frame positions
+* Additional frame customization
 * Additional sound packs
 * Escalating warning sounds
 * Sound toggles
@@ -86,7 +87,6 @@ The addon is functional and combat-tested, but additional polish and customizati
 
 # Credits
 
-Created by QueerSquid.
+Created by CodyDryden.
 
 Built for PvE players who occasionally forget healers exist until it is already too late.
-
