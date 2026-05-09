@@ -87,6 +87,6 @@ The addon is functional and combat-tested, with persistent frame positioning, cu
 
 # Credits
 
-Created by CodyDryden.
+Created by QueerSquid.
 
 Built for PvE players who occasionally forget healers exist until it is already too late.
