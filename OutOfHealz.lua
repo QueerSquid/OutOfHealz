@@ -9,16 +9,32 @@ local lastCheck = 0
 local interval = 1
 
 local warningFrame = CreateFrame("Frame", "OutOfHealzWarningFrame", UIParent)
-warningFrame:SetSize(500, 100)
+warningFrame:SetSize(700, 120)
 warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
 warningFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 warningFrame:Hide()
 
+local outlineText = warningFrame:CreateFontString(nil, "OVERLAY")
+outlineText:SetFont("Fonts\\FRIZQT__.TTF", 68, "OUTLINE")
+outlineText:SetPoint("CENTER", warningFrame, "CENTER", 2, -2)
+outlineText:SetText("OUT OF HEAL RANGE")
+outlineText:SetTextColor(0.6, 0, 0, 0.8)
+
 local warningText = warningFrame:CreateFontString(nil, "OVERLAY")
-warningText:SetFont("Fonts\\FRIZQT__.TTF", 32, "OUTLINE")
-warningText:SetPoint("CENTER", warningFrame, "CENTER")
+warningText:SetFont("Fonts\\FRIZQT__.TTF", 68, "OUTLINE")
+warningText:SetPoint("CENTER", warningFrame, "CENTER", 0, 0)
 warningText:SetText("OUT OF HEAL RANGE")
-warningText:SetTextColor(1, 0, 0, 1)
+warningText:SetTextColor(1, 1, 1, 1)
+
+local flashTime = 0
+
+warningFrame:SetScript("OnUpdate", function(self, elapsed)
+    flashTime = flashTime + elapsed
+
+    local alpha = (math.sin(flashTime * 10) + 1) / 2
+    outlineText:SetAlpha(alpha)
+    warningText:SetAlpha(alpha)
+end)
 
 local function IsHealerInRange()
     local healerInRange = false
