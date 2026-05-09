@@ -1,6 +1,6 @@
 ## Interface: 120005
 ## Title: OutOfHealz
-## Notes: Alerts you when no healer is in range. Get back in range, eat a cookie, or die.
+## Notes: Combat healer range warning addon with visual and audio alerts.
 ## Author: QueerSquid
 ## Version: 0.1
 
