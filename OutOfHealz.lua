@@ -8,6 +8,8 @@ local lastState = nil
 local lastCheck = 0
 local interval = 0.25
 
+local isFrameUnlocked = false
+
 local cookieSound = "Interface\\AddOns\\OutOfHealz\\Media\\cookie_nom_warning.ogg"
 local lastSoundTime = 0
 local soundCooldown = 6
@@ -38,6 +40,18 @@ warningFrame:SetScript("OnUpdate", function(self, elapsed)
     local alpha = (math.sin(flashTime * 10) + 1) / 2
     outlineText:SetAlpha(alpha)
     warningText:SetAlpha(alpha)
+end)
+
+warningFrame:SetMovable(true)
+warningFrame:EnableMouse(false)
+warningFrame:RegisterForDrag("LeftButton")
+
+warningFrame:SetScript("OnDragStart", function(self)
+    self:StartMoving()
+end)
+
+warningFrame:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
 end)
 
 local function IsHealerInRange()
@@ -85,7 +99,9 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     lastCheck = now
 
     if not InCombatLockdown() then
-        warningFrame:Hide()
+        if not isFrameUnlocked then
+            warningFrame:Hide()
+        end
         return
     end
 
@@ -136,9 +152,26 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
     elseif msg == "hide" then
         warningFrame:Hide()
         print("|cff00ff00OutOfHealz:|r Warning hidden.")
+    elseif msg == "unlock" then
+        isFrameUnlocked = true
+        warningFrame:Show()
+        warningFrame:EnableMouse(true)
+        print("|cff00ff00OutOfHealz:|r Frame unlocked. Drag to move.")
+    elseif msg == "lock" then
+        isFrameUnlocked = false
+        warningFrame:EnableMouse(false)
+        warningFrame:Hide()
+        print("|cff00ff00OutOfHealz:|r Frame locked.")
+    elseif msg == "reset" then
+        warningFrame:ClearAllPoints()
+        warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+        print("|cff00ff00OutOfHealz:|r Frame reset to center.")
     else
         print("|cff00ff00OutOfHealz commands:|r")
         print("/ooh test - Show warning and play sound")
         print("/ooh hide - Hide warning")
+        print("/ooh unlock - Unlock and move warning frame")
+        print("/ooh lock - Lock warning frame")
+        print("/ooh reset - Reset warning frame to center")
     end
 end
