@@ -2,9 +2,23 @@ print("|cff00ff00OutOfHealz loaded.|r")
 
 local frame = CreateFrame("Frame")
 
+local RangeCheck = LibStub("LibRangeCheck-3.0")
+
 local lastState = nil
 local lastCheck = 0
 local interval = 1
+
+local warningFrame = CreateFrame("Frame", "OutOfHealzWarningFrame", UIParent)
+warningFrame:SetSize(500, 100)
+warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+warningFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+warningFrame:Hide()
+
+local warningText = warningFrame:CreateFontString(nil, "OVERLAY")
+warningText:SetFont("Fonts\\FRIZQT__.TTF", 32, "OUTLINE")
+warningText:SetPoint("CENTER", warningFrame, "CENTER")
+warningText:SetText("OUT OF HEAL RANGE")
+warningText:SetTextColor(1, 0, 0, 1)
 
 local function IsHealerInRange()
     local healerInRange = false
@@ -12,14 +26,17 @@ local function IsHealerInRange()
 
     local function CheckUnit(unit)
         if UnitExists(unit)
+            and not UnitIsUnit(unit, "player")
             and not UnitIsDeadOrGhost(unit)
             and UnitGroupRolesAssigned(unit) == "HEALER" then
 
             healerCount = healerCount + 1
 
-            local inRange = CheckInteractDistance(unit, 4)
+            local minRange, maxRange = RangeCheck:GetRange(unit)
+            -- print("Debug:", InCombatLockdown(), unit, UnitName(unit), tostring(inRange))
+            -- print("RangeCheck:", unit, minRange, maxRange)
 
-            if inRange == true then
+            if maxRange and maxRange <= 40 then
                  healerInRange = true
             end
         end
@@ -47,6 +64,11 @@ frame:SetScript("OnUpdate", function(self, elapsed)
 
     lastCheck = now
 
+    if not InCombatLockdown() then
+        warningFrame:Hide()
+        return
+    end
+
     local inRange, totalHealers = IsHealerInRange()
 
     local currentState
@@ -61,6 +83,13 @@ frame:SetScript("OnUpdate", function(self, elapsed)
 
     if currentState ~= lastState then
         print("|cff00ff00OutOfHealz:|r " .. currentState)
+
+        if currentState == "OUT OF HEAL RANGE" then
+            warningFrame:Show()
+        else
+            warningFrame:Hide()
+        end
+
         lastState = currentState
     end
 end)
