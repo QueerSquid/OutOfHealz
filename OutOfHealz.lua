@@ -1,6 +1,7 @@
 print("|cff00ff00OutOfHealz loaded.|r")
 
 local frame = CreateFrame("Frame")
+OutOfHealzDB = OutOfHealzDB or {}
 
 local RangeCheck = LibStub("LibRangeCheck-3.0")
 
@@ -16,7 +17,11 @@ local soundCooldown = 6
 
 local warningFrame = CreateFrame("Frame", "OutOfHealzWarningFrame", UIParent)
 warningFrame:SetSize(700, 120)
-warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+if OutOfHealzDB.point then
+    warningFrame:SetPoint(OutOfHealzDB.point, UIParent, OutOfHealzDB.relativePoint, OutOfHealzDB.xOfs, OutOfHealzDB.yOfs)
+else
+    warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
+end
 warningFrame:SetFrameStrata("FULLSCREEN_DIALOG")
 warningFrame:Hide()
 
@@ -52,6 +57,15 @@ end)
 
 warningFrame:SetScript("OnDragStop", function(self)
     self:StopMovingOrSizing()
+
+    local point, relativeTo, relativePoint, xOfs, yOfs = self:GetPoint()
+
+    OutOfHealzDB.point = point
+    OutOfHealzDB.relativePoint = relativePoint
+    OutOfHealzDB.xOfs = xOfs
+    OutOfHealzDB.yOfs = yOfs
+
+    print("|cff00ff00OutOfHealz:|r Frame position saved.")
 end)
 
 local function IsHealerInRange()
