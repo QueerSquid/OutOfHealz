@@ -3,6 +3,10 @@ print("|cff00ff00OutOfHealz loaded.|r")
 local frame = CreateFrame("Frame")
 OutOfHealzDB = OutOfHealzDB or {}
 
+if OutOfHealzDB.instanceOnly == nil then
+    OutOfHealzDB.instanceOnly = true
+end
+
 local RangeCheck = LibStub("LibRangeCheck-3.0")
 
 local lastState = nil
@@ -121,6 +125,17 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         return
     end
 
+    if OutOfHealzDB.instanceOnly then
+        local inInstance, instanceType = IsInInstance()
+
+        if not inInstance or (instanceType ~= "party" and instanceType ~= "raid") then
+            if not isFrameUnlocked then
+                warningFrame:Hide()
+            end
+            return
+        end
+    end
+
     local inRange, totalHealers = IsHealerInRange()
 
     local currentState
@@ -205,6 +220,24 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         warningFrame:ClearAllPoints()
         warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
         print("|cff00ff00OutOfHealz:|r Frame reset to center.")
+    elseif string.sub(msg, 1, 8) == "instance" then
+        local settings = string.match(msg, "^instance%s+(%S+)$")
+
+        if setting == "on" then
+            OutOfHealzDB.instanceOnly = true
+
+        elseif setting == "off" then
+            OutOfHealzDB.instanceOnly = false
+
+        else
+            OutOfHealzDB.instanceOnly = not OutOfHealzDB.instanceOnly
+        end
+
+        if OutOfHealzDB.instanceOnly then
+            print("|cff00ff00OutOfHealz:|r Instance-only mode enabled.")
+        else
+            print("|cff00ff00OutOfHealz:|r Instance-only mode disabled for testing.")
+        end
     else
         print("|cff00ff00OutOfHealz commands:|r")
         print("/ooh test - Show warning and play sound")
@@ -212,5 +245,8 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         print("/ooh unlock - Unlock and move warning frame")
         print("/ooh lock - Lock warning frame")
         print("/ooh reset - Reset warning frame to center")
+        print("/ooh instance - Toggle instance-only mode")
+        print("/ooh instance on - Enable instance-only mode")
+        print("/ooh instance off - Disable instance-only mode")
     end
 end
