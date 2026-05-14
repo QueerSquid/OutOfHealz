@@ -20,18 +20,23 @@ The addon monitors healer proximity in real time during combat and provides both
 * Persistent saved frame positioning
 * Slash command support
 * Frame reset support
+* Instance-only mode for PvE dungeon and raid use
+* Toggleable testing mode for use outside instances
 
 ---
 
 # Slash Commands
 
-| Command       | Function                                          |
-| ------------- | ------------------------------------------------- |
-| `/ooh test`   | Shows the warning frame and plays the sound alert |
-| `/ooh hide`   | Hides the warning frame                           |
-| `/ooh unlock` | Unlocks the warning frame for movement            |
-| `/ooh lock`   | Locks the warning frame                           |
-| `/ooh reset`  | Resets the warning frame position                 |
+| Command             | Function                                          |
+| ------------------- | ------------------------------------------------- |
+| `/ooh test`         | Shows the warning frame and plays the sound alert |
+| `/ooh hide`         | Hides the warning frame                           |
+| `/ooh unlock`       | Unlocks the warning frame for movement            |
+| `/ooh lock`         | Locks the warning frame                           |
+| `/ooh reset`        | Resets the warning frame position                 |
+| `/ooh instance`     | Toggles instance-only mode                        |
+| `/ooh instance on`  | Enables instance-only mode                        |
+| `/ooh instance off` | Disables instance-only mode for testing           |
 
 Full command aliases:
 
@@ -58,29 +63,28 @@ World of Warcraft/_retail_/Interface/AddOns/
 
 # Current Development Status
 
-OutOfHealz is currently in active development and testing.
-
-The addon is functional and combat-tested, with persistent frame positioning, custom sound support, and combat-safe healer range detection currently implemented. Additional polish and customization options are still planned before public release.
+OutOfHealz is currently in Beta and active testing.
 
 ---
 
 # Planned Features
 
-* Instance-only filtering
 * Additional frame customization
-* Additional sound packs
 * Escalating warning sounds
 * Sound toggles
 * Adjustable warning scale
 * Additional visual customization
 * Options/settings panel
+* Health threshold warning
+* Healthstone / health pot / defensive reminder
+* Possible class/spec-aware warning behavior
 
 ---
 
 # Known Notes
 
-* The addon currently remains active anywhere combat can occur to simplify testing.
-* Training dummies are currently used for combat validation.
+* Instance-only mode is enabled by default for dungeon and raid use.
+* Instance-only mode can be disabled manually for testing purposes with `/ooh instance off`.
 * LibRangeCheck-3.0 is used due to combat limitations and taint issues with Blizzard range APIs.
 
 ---
