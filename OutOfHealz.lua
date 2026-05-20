@@ -14,15 +14,17 @@ local lastCheck = 0
 local interval = 0.25
 
 local outOfRangeStartTime = nil
+local stageThreeTriggered = false
 
 local isFrameUnlocked = false
 
 local cookieSound = "Interface\\AddOns\\OutOfHealz\\Media\\cookie_nom_warning.ogg"
+local dangerSound = "Interface\\AddOns\\OutOfHealz\\Media\\Get_Over_Here.ogg"
 local lastSoundTime = 0
 local soundCooldown = 6
 
 local warningFrame = CreateFrame("Frame", "OutOfHealzWarningFrame", UIParent)
-warningFrame:SetSize(700, 120)
+warningFrame:SetSize(900, 120)
 if OutOfHealzDB.point then
     warningFrame:SetPoint(OutOfHealzDB.point, UIParent, OutOfHealzDB.relativePoint, OutOfHealzDB.xOfs, OutOfHealzDB.yOfs)
 else
@@ -157,7 +159,9 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         local warningMessage = "OUT OF HEAL RANGE"
 
         if outTime >= 12 then
-            warningMessage = "IF YOU DIE, IT'S YOUR FUALT"
+            warningMessage = "IF YOU DIE, IT'S YOUR FAULT"
+            stageThreeTriggered = true
+
         elseif outTime >= 6 then
             warningMessage = "STILL OUT OF HEAL RANGE"
         end
@@ -166,6 +170,7 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         warningText:SetText(warningMessage)
     else
         outOfRangeStartTime = nil
+        stageThreeTriggered = false
 
         outlineText:SetText("OUT OF HEAL RANGE")
         warningText:SetText("OUT OF HEAL RANGE")
@@ -187,8 +192,15 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         local soundNow = GetTime()
 
         if soundNow - lastSoundTime >= soundCooldown then
-            PlaySoundFile(cookieSound, "Master")
-            lastSoundTime = soundNow
+            if soundNow - lastSoundTime >= soundCooldown then
+                if stageThreeTriggered then
+                    PlaySoundFile(dangerSound, "Master")
+                else
+                    PlaySoundFile(cookieSound, "Master")
+                end
+
+                lastSoundTime = soundNow
+            end
         end
     end
 end)
@@ -221,7 +233,7 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
         print("|cff00ff00OutOfHealz:|r Frame reset to center.")
     elseif string.sub(msg, 1, 8) == "instance" then
-        local settings = string.match(msg, "^instance%s+(%S+)$")
+        local setting = string.match(msg, "^instance%s+(%S+)$")
 
         if setting == "on" then
             OutOfHealzDB.instanceOnly = true
