@@ -12,8 +12,8 @@ The addon monitors healer proximity in real time during combat and provides both
 
 * Combat-only healer range monitoring
 * Visual out-of-range warning system
-* Flashing warning text
-* Custom looping sound alerts
+* Escalating warning text
+* Escalating sound alerts
 * Healer role detection
 * LibRangeCheck-3.0 integration for combat-safe range detection
 * Draggable warning frame
@@ -70,7 +70,6 @@ OutOfHealz is currently in Beta and active testing.
 # Planned Features
 
 * Additional frame customization
-* Escalating warning sounds
 * Sound toggles
 * Adjustable warning scale
 * Additional visual customization
