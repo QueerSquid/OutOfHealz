@@ -7,6 +7,10 @@ if OutOfHealzDB.instanceOnly == nil then
     OutOfHealzDB.instanceOnly = true
 end
 
+if OutOfHealzDB.soundEnabled == nil then
+    OutOfHealzDB.soundEnabled = true
+end
+
 local RangeCheck = LibStub("LibRangeCheck-3.0")
 
 local lastState = nil
@@ -46,6 +50,13 @@ warningText:SetText("OUT OF HEAL RANGE")
 warningText:SetTextColor(1, 1, 1, 1)
 
 local flashTime = 0
+
+local function ResetWarningState()
+    outOfRangeStartTime = nil
+    stageThreeTriggered = false
+    outlineText:SetText("OUT OF HEAL RANGE")
+    warningText:SetText("OUT OF HEAL RANGE")
+end
 
 warningFrame:SetScript("OnUpdate", function(self, elapsed)
     flashTime = flashTime + elapsed
@@ -121,9 +132,12 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     lastCheck = now
 
     if not InCombatLockdown() then
+        ResetWarningState()
+
         if not isFrameUnlocked then
             warningFrame:Hide()
         end
+
         return
     end
 
@@ -188,19 +202,17 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         lastState = currentState
     end
 
-    if currentState == "OUT OF HEAL RANGE" then
+    if currentState == "OUT OF HEAL RANGE" and OutOfHealzDB.soundEnabled then
         local soundNow = GetTime()
 
         if soundNow - lastSoundTime >= soundCooldown then
-            if soundNow - lastSoundTime >= soundCooldown then
-                if stageThreeTriggered then
-                    PlaySoundFile(dangerSound, "Master")
-                else
-                    PlaySoundFile(cookieSound, "Master")
-                end
-
-                lastSoundTime = soundNow
+            if stageThreeTriggered then
+                PlaySoundFile(dangerSound, "Master")
+            else
+                PlaySoundFile(cookieSound, "Master")
             end
+
+            lastSoundTime = soundNow
         end
     end
 end)
@@ -211,11 +223,7 @@ SLASH_OUTOFHEALZ2 = "/ooh"
 SlashCmdList["OUTOFHEALZ"] = function(msg)
     msg = string.lower(strtrim(msg or ""))
 
-    if msg == "test" then
-        warningFrame:Show()
-        PlaySoundFile(cookieSound, "Master")
-        print("|cff00ff00OutOfHealz:|r Test warning shown.")
-    elseif msg == "hide" then
+    if msg == "hide" then
         warningFrame:Hide()
         print("|cff00ff00OutOfHealz:|r Warning hidden.")
     elseif msg == "unlock" then
@@ -250,9 +258,28 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         else
             print("|cff00ff00OutOfHealz:|r Instance-only mode disabled for testing.")
         end
+
+    elseif string.sub(msg, 1, 5) == "sound" then
+        local setting = string.match(msg, "^sound%s+(%S+)$")
+
+        if setting == "on" then
+            OutOfHealzDB.soundEnabled = true
+
+        elseif setting == "off" then
+            OutOfHealzDB.soundEnabled = false
+
+        else
+            OutOfHealzDB.soundEnabled = not OutOfHealzDB.soundEnabled
+        end
+
+        if OutOfHealzDB.soundEnabled then
+            print("|cff00ff00OutOfHealz:|r Sound enabled.")
+        else
+            print("|cff00ff00OutOfHealz:|r Sound disabled.")
+        end
+
     else
         print("|cff00ff00OutOfHealz commands:|r")
-        print("/ooh test - Show warning and play sound")
         print("/ooh hide - Hide warning")
         print("/ooh unlock - Unlock and move warning frame")
         print("/ooh lock - Lock warning frame")
@@ -260,5 +287,8 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         print("/ooh instance - Toggle instance-only mode")
         print("/ooh instance on - Enable instance-only mode")
         print("/ooh instance off - Disable instance-only mode")
+        print("/ooh sound - Toggle sound alerts")
+        print("/ooh sound on - Enable sound alerts")
+        print("/ooh sound off - Disable sound alerts")
     end
 end

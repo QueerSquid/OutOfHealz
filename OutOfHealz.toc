@@ -1,8 +1,8 @@
-## Interface: 120005
+## Interface: 120007
 ## Title: OutOfHealz
 ## Notes: Combat healer range warning addon with visual and audio alerts.
 ## Author: QueerSquid
-## Version: 0.5.1-beta
+## Version: 1.0.0
 ## SavedVariables: OutOfHealzDB
 
 Libs\LibStub-1.0\LibStub.lua
