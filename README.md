@@ -18,10 +18,10 @@ The addon monitors healer proximity in real time during combat and provides both
 * LibRangeCheck-3.0 integration for combat-safe range detection
 * Draggable warning frame
 * Persistent saved frame positioning
+* Sound alert toggles
 * Slash command support
 * Frame reset support
-* Instance-only mode for PvE dungeon and raid use
-* Toggleable testing mode for use outside instances
+* Dugeon and raid-focused operation
 
 ---
 
@@ -29,7 +29,6 @@ The addon monitors healer proximity in real time during combat and provides both
 
 | Command             | Function                                          |
 | ------------------- | ------------------------------------------------- |
-| `/ooh test`         | Shows the warning frame and plays the sound alert |
 | `/ooh hide`         | Hides the warning frame                           |
 | `/ooh unlock`       | Unlocks the warning frame for movement            |
 | `/ooh lock`         | Locks the warning frame                           |
@@ -37,6 +36,9 @@ The addon monitors healer proximity in real time during combat and provides both
 | `/ooh instance`     | Toggles instance-only mode                        |
 | `/ooh instance on`  | Enables instance-only mode                        |
 | `/ooh instance off` | Disables instance-only mode for testing           |
+| `/ooh sound`        | Toggle sound alerts                               |
+| `/ooh sound on`     | Enable sound alerts                               |
+| `/ooh sound off`    | Disable sound alerts                              |
 
 Full command aliases:
 
@@ -49,7 +51,7 @@ Full command aliases:
 
 # Installation
 
-1. Download or clone the addon
+1. Download or install through CurseForge
 2. Place the `OutOfHealz` folder into:
 
 ```text
@@ -63,14 +65,12 @@ World of Warcraft/_retail_/Interface/AddOns/
 
 # Current Development Status
 
-OutOfHealz is currently in Beta and active testing.
+OutOfHealz is currently released and actively maintained.
 
 ---
 
 # Planned Features
 
-* Additional frame customization
-* Sound toggles
 * Adjustable warning scale
 * Additional visual customization
 * Options/settings panel
@@ -82,7 +82,8 @@ OutOfHealz is currently in Beta and active testing.
 
 # Known Notes
 
-* Instance-only mode is enabled by default for dungeon and raid use.
+* Instance-only mode is enabled by default.
+* OutOfHealz is designed primarily for dungeon and raid content.
 * Instance-only mode can be disabled manually for testing purposes with `/ooh instance off`.
 * LibRangeCheck-3.0 is used due to combat limitations and taint issues with Blizzard range APIs.
 
