@@ -1,6 +1,15 @@
+--------------------------------------------------
+-- OutOfHealz Core
+--------------------------------------------------
+
 print("|cff00ff00OutOfHealz loaded.|r")
 
 local frame = CreateFrame("Frame")
+
+--------------------------------------------------
+-- Saved Variables
+--------------------------------------------------
+
 OutOfHealzDB = OutOfHealzDB or {}
 
 if OutOfHealzDB.instanceOnly == nil then
@@ -11,7 +20,23 @@ if OutOfHealzDB.soundEnabled == nil then
     OutOfHealzDB.soundEnabled = true
 end
 
+if OutOfHealzDB.pvpEnabled == nil then
+    OutOfHealzDB.pvpEnabled = false
+end
+
+if OutOfHealzDB.warningScale == nil then
+    OutOfHealzDB.warningScale = 1
+end
+
+--------------------------------------------------
+-- Libraries
+--------------------------------------------------
+
 local RangeCheck = LibStub("LibRangeCheck-3.0")
+
+--------------------------------------------------
+-- State Variables
+--------------------------------------------------
 
 local lastState = nil
 local lastCheck = 0
@@ -27,8 +52,13 @@ local dangerSound = "Interface\\AddOns\\OutOfHealz\\Media\\Get_Over_Here.ogg"
 local lastSoundTime = 0
 local soundCooldown = 6
 
+--------------------------------------------------
+-- Warning Frame
+--------------------------------------------------
+
 local warningFrame = CreateFrame("Frame", "OutOfHealzWarningFrame", UIParent)
 warningFrame:SetSize(900, 120)
+warningFrame:SetScale(OutOfHealzDB.warningScale or 1)
 if OutOfHealzDB.point then
     warningFrame:SetPoint(OutOfHealzDB.point, UIParent, OutOfHealzDB.relativePoint, OutOfHealzDB.xOfs, OutOfHealzDB.yOfs)
 else
@@ -51,6 +81,10 @@ warningText:SetTextColor(1, 1, 1, 1)
 
 local flashTime = 0
 
+--------------------------------------------------
+-- Helper Functions
+--------------------------------------------------
+
 local function ResetWarningState()
     outOfRangeStartTime = nil
     stageThreeTriggered = false
@@ -65,6 +99,10 @@ warningFrame:SetScript("OnUpdate", function(self, elapsed)
     outlineText:SetAlpha(alpha)
     warningText:SetAlpha(alpha)
 end)
+
+--------------------------------------------------
+-- Warning Frame Movement
+--------------------------------------------------
 
 warningFrame:SetMovable(true)
 warningFrame:EnableMouse(false)
@@ -86,6 +124,10 @@ warningFrame:SetScript("OnDragStop", function(self)
 
     print("|cff00ff00OutOfHealz:|r Frame position saved.")
 end)
+
+--------------------------------------------------
+-- Healer Detection
+--------------------------------------------------
 
 local function IsHealerInRange()
     local healerInRange = false
@@ -121,6 +163,10 @@ local function IsHealerInRange()
 
     return healerInRange, healerCount
 end
+
+--------------------------------------------------
+-- Core Detection Logic
+--------------------------------------------------
 
 frame:SetScript("OnUpdate", function(self, elapsed)
     local now = GetTime()
@@ -217,6 +263,10 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     end
 end)
 
+--------------------------------------------------
+-- Slash Commands
+--------------------------------------------------
+
 SLASH_OUTOFHEALZ1 = "/outofhealz"
 SLASH_OUTOFHEALZ2 = "/ooh"
 
@@ -240,6 +290,14 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         warningFrame:ClearAllPoints()
         warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
         print("|cff00ff00OutOfHealz:|r Frame reset to center.")
+    elseif msg == "config" or msg == "options" or msg == "settings" then
+        if Settings and Settings.OpenToCategory then
+            Settings.OpenToCategory(OutOfHealzSettingsCategory.ID)
+        else
+            InterfaceOptionsFrame_OpenToCategory("OutOfHealz")
+            InterfaceOptionsFrame_OpenToCategory("OutOfHealz")
+        end
+
     elseif string.sub(msg, 1, 8) == "instance" then
         local setting = string.match(msg, "^instance%s+(%S+)$")
 
@@ -290,5 +348,8 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         print("/ooh sound - Toggle sound alerts")
         print("/ooh sound on - Enable sound alerts")
         print("/ooh sound off - Disable sound alerts")
+        print("/ooh config - Open options")
+        print("/ooh options - Open options")
+        print("/ooh settings - Open options")
     end
 end
