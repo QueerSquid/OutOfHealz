@@ -16,29 +16,36 @@ The addon monitors healer proximity in real time during combat and provides both
 * Escalating sound alerts
 * Healer role detection
 * LibRangeCheck-3.0 integration for combat-safe range detection
+* Native Blizzard AddOns configuration panel
+* Live warning frame scale adjustment
+* Toggleable sound alerts
+* Toggleable instance-only mode
+* PvP behavior setting (future functionality)
 * Draggable warning frame
 * Persistent saved frame positioning
-* Sound alert toggles
 * Slash command support
 * Frame reset support
-* Dugeon and raid-focused operation
 
 ---
 
 # Slash Commands
 
-| Command             | Function                                          |
-| ------------------- | ------------------------------------------------- |
-| `/ooh hide`         | Hides the warning frame                           |
-| `/ooh unlock`       | Unlocks the warning frame for movement            |
-| `/ooh lock`         | Locks the warning frame                           |
-| `/ooh reset`        | Resets the warning frame position                 |
-| `/ooh instance`     | Toggles instance-only mode                        |
-| `/ooh instance on`  | Enables instance-only mode                        |
-| `/ooh instance off` | Disables instance-only mode for testing           |
-| `/ooh sound`        | Toggle sound alerts                               |
-| `/ooh sound on`     | Enable sound alerts                               |
-| `/ooh sound off`    | Disable sound alerts                              |
+| Command | Function |
+|----------|----------|
+| `/ooh` | Display available commands |
+| `/ooh config` | Open the OutOfHealz options panel |
+| `/ooh options` | Open the OutOfHealz options panel |
+| `/ooh settings` | Open the OutOfHealz options panel |
+| `/ooh hide` | Hide the warning frame |
+| `/ooh unlock` | Unlock and move the warning frame |
+| `/ooh lock` | Lock the warning frame |
+| `/ooh reset` | Reset the warning frame position |
+| `/ooh instance` | Toggle instance-only mode |
+| `/ooh instance on` | Enable instance-only mode |
+| `/ooh instance off` | Disable instance-only mode for testing |
+| `/ooh sound` | Toggle sound alerts |
+| `/ooh sound on` | Enable sound alerts |
+| `/ooh sound off` | Disable sound alerts |
 
 Full command aliases:
 
@@ -67,25 +74,39 @@ World of Warcraft/_retail_/Interface/AddOns/
 
 OutOfHealz is currently released and actively maintained.
 
+Core functionality has been validated through live dungeon and raid testing. Current development is focused on expanding customization options and additional survivability features.
+
 ---
 
 # Planned Features
 
-* Adjustable warning scale
+## High Priority
+
+* Health threshold warnings
+* Health potion reminder
+* Healthstone reminder
+* PvP behavior implementation
+* Additional class/spec-aware warning behavior
+
+## Quality of Life
+
+* Sound packs
 * Additional visual customization
-* Options/settings panel
-* Health threshold warning
-* Healthstone / health pot / defensive reminder
-* Possible class/spec-aware warning behavior
+* Enhanced warning frame customization
+
+## Future
+
+* Standalone configuration window
+* Optional minimap launcher
 
 ---
 
 # Known Notes
 
 * Instance-only mode is enabled by default.
-* OutOfHealz is designed primarily for dungeon and raid content.
-* Instance-only mode can be disabled manually for testing purposes with `/ooh instance off`.
-* LibRangeCheck-3.0 is used due to combat limitations and taint issues with Blizzard range APIs.
+* All configuration options are available through the Blizzard AddOns settings panel or `/ooh config`.
+* Slash commands remain fully supported.
+* LibRangeCheck-3.0 is used for combat-safe healer range detection due to Blizzard API limitations.
 
 ---
 
