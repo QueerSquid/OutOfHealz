@@ -28,6 +28,30 @@ if OutOfHealzDB.warningScale == nil then
     OutOfHealzDB.warningScale = 1
 end
 
+if OutOfHealzDB.healthWarningEnabled == nil then
+    OutOfHealzDB.healthWarningEnabled = true
+end
+
+if OutOfHealzDB.healthThreshold == nil then
+    OutOfHealzDB.healthThreshold = 35
+end
+
+if OutOfHealzDB.healthPoint == nil then
+    OutOfHealzDB.healthPoint = "CENTER"
+end
+
+if OutOfHealzDB.healthRelativePoint == nil then
+    OutOfHealzDB.healthRelativePoint = "CENTER"
+end
+
+if OutOfHealzDB.healthXOfs == nil then
+    OutOfHealzDB.healthXOfs = 0
+end
+
+if OutOfHealzDB.healthYOfs == nil then
+    OutOfHealzDB.healthYOfs = 90
+end
+
 --------------------------------------------------
 -- Libraries
 --------------------------------------------------
@@ -82,6 +106,45 @@ warningText:SetTextColor(1, 1, 1, 1)
 local flashTime = 0
 
 --------------------------------------------------
+-- Health Warning Frame
+--------------------------------------------------
+
+local healthWarningFrame = CreateFrame("Frame", "OutOfHealzHealthWarningFrame", UIParent)
+healthWarningFrame:SetSize(900, 120)
+healthWarningFrame:SetScale(OutOfHealzDB.warningScale or 1)
+healthWarningFrame:SetPoint(
+    OutOfHealzDB.healthPoint or "CENTER",
+    UIParent,
+    OutOfHealzDB.healthRelativePoint or "CENTER",
+    OutOfHealzDB.healthXOfs or 0,
+    OutOfHealzDB.healthYOfs or 90
+)
+healthWarningFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+healthWarningFrame:Hide()
+
+local healthOutlineText = healthWarningFrame:CreateFontString(nil, "OVERLAY")
+healthOutlineText:SetFont("Fonts\\FRIZQT__.TTF", 68, "OUTLINE")
+healthOutlineText:SetPoint("CENTER", healthWarningFrame, "CENTER", 2, -2)
+healthOutlineText:SetText("LOW HEALTH")
+healthOutlineText:SetTextColor(0.6, 0, 0, 0.8)
+
+local healthWarningText = healthWarningFrame:CreateFontString(nil, "OVERLAY")
+healthWarningText:SetFont("Fonts\\FRIZQT__.TTF", 68, "OUTLINE")
+healthWarningText:SetPoint("CENTER", healthWarningFrame, "CENTER", 0, 0)
+healthWarningText:SetText("LOW HEALTH")
+healthWarningText:SetTextColor(1, 1, 1, 1)
+
+local healthFlashTime = 0
+
+healthWarningFrame:SetScript("OnUpdate", function(self, elapsed)
+    healthFlashTime = healthFlashTime + elapsed
+
+    local alpha = (math.sin(healthFlashTime * 10) + 1) / 2
+    healthOutlineText:SetAlpha(alpha)
+    healthWarningText:SetAlpha(alpha)
+end)
+
+--------------------------------------------------
 -- Helper Functions
 --------------------------------------------------
 
@@ -91,6 +154,88 @@ local function ResetWarningState()
     outlineText:SetText("OUT OF HEAL RANGE")
     warningText:SetText("OUT OF HEAL RANGE")
 end
+
+local healthThresholdCurve = nil
+local healthThresholdCurveValue = nil
+
+local function GetHealthThresholdCurve()
+    local threshold = OutOfHealzDB.healthThreshold or 35
+
+    if healthThresholdCurve and healthThresholdCurveValue == threshold then
+        return healthThresholdCurve
+    end
+
+    healthThresholdCurveValue = threshold
+
+    local thresholdFraction = threshold / 100
+
+    healthThresholdCurve = C_CurveUtil.CreateColorCurve()
+    healthThresholdCurve:SetType(Enum.LuaCurveType.Linear)
+
+    -- Visible at or below the configured threshold.
+    healthThresholdCurve:AddPoint(
+        0,
+        CreateColor(1, 1, 1, 1)
+    )
+
+    -- Remain visible through the configured threshold.
+    healthThresholdCurve:AddPoint(
+        thresholdFraction,
+        CreateColor(1, 1, 1, 1)
+    )
+
+    -- Immediately hide once health rises above the threshold.
+        healthThresholdCurve:AddPoint(
+        math.min(thresholdFraction + 0.0001, 1),
+        CreateColor(1, 1, 1, 0)
+    )
+
+    return healthThresholdCurve
+end
+
+local function IsHealthWarningAllowed()
+    if not OutOfHealzDB.healthWarningEnabled then
+        return false
+    end
+
+    if not InCombatLockdown() then
+        return false
+    end
+
+    if OutOfHealzDB.instanceOnly then
+        local inInstance, instanceType = IsInInstance()
+
+        if not inInstance or (instanceType ~= "party" and instanceType ~= "raid") then
+            return false
+        end
+    end
+
+    return true
+end
+
+local function UpdateHealthWarning()
+    if not IsHealthWarningAllowed() then
+        healthWarningFrame:Hide()
+        healthWarningFrame:SetAlpha(1)
+        return
+    end
+
+    local curve = GetHealthThresholdCurve()
+
+    local color = UnitHealthPercent(
+        "player",
+        true,
+        curve
+    )
+
+    healthWarningFrame:Show()
+
+    healthWarningFrame:SetAlpha(
+        select(4, color:GetRGBA())
+    )
+end
+
+OutOfHealz_UpdateHealthWarning = UpdateHealthWarning
 
 warningFrame:SetScript("OnUpdate", function(self, elapsed)
     flashTime = flashTime + elapsed
@@ -123,6 +268,27 @@ warningFrame:SetScript("OnDragStop", function(self)
     OutOfHealzDB.yOfs = yOfs
 
     print("|cff00ff00OutOfHealz:|r Frame position saved.")
+end)
+
+healthWarningFrame:SetMovable(true)
+healthWarningFrame:EnableMouse(false)
+healthWarningFrame:RegisterForDrag("LeftButton")
+
+healthWarningFrame:SetScript("OnDragStart", function(self)
+    self:StartMoving()
+end)
+
+healthWarningFrame:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+
+    local point, relativeTo, relativePoint, xOfs, yOfs = self:GetPoint()
+
+    OutOfHealzDB.healthPoint = point
+    OutOfHealzDB.healthRelativePoint = relativePoint
+    OutOfHealzDB.healthXOfs = xOfs
+    OutOfHealzDB.healthYOfs = yOfs
+
+    print("|cff00ff00OutOfHealz:|r Health warning position saved.")
 end)
 
 --------------------------------------------------
@@ -163,6 +329,27 @@ local function IsHealerInRange()
 
     return healerInRange, healerCount
 end
+
+--------------------------------------------------
+-- Health Detection
+--------------------------------------------------
+
+local healthEventFrame = CreateFrame("Frame")
+
+healthEventFrame:RegisterUnitEvent("UNIT_HEALTH", "player")
+healthEventFrame:RegisterUnitEvent("UNIT_MAXHEALTH", "player")
+healthEventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
+healthEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
+healthEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+healthEventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+
+healthEventFrame:SetScript("OnEvent", function(self, event, unit)
+    if unit and unit ~= "player" then
+        return
+    end
+
+    UpdateHealthWarning()
+end)
 
 --------------------------------------------------
 -- Core Detection Logic
@@ -278,18 +465,44 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         print("|cff00ff00OutOfHealz:|r Warning hidden.")
     elseif msg == "unlock" then
         isFrameUnlocked = true
+
         warningFrame:Show()
-        warningFrame:EnableMouse(true)
-        print("|cff00ff00OutOfHealz:|r Frame unlocked. Drag to move.")
+     warningFrame:EnableMouse(true)
+
+     healthWarningFrame:Show()
+        healthWarningFrame:SetAlpha(1)
+     healthWarningFrame:EnableMouse(true)
+
+     print("|cff00ff00OutOfHealz:|r Warning frames unlocked. Drag to move.")
     elseif msg == "lock" then
         isFrameUnlocked = false
-        warningFrame:EnableMouse(false)
-        warningFrame:Hide()
-        print("|cff00ff00OutOfHealz:|r Frame locked.")
+
+     warningFrame:EnableMouse(false)
+     warningFrame:Hide()
+
+     healthWarningFrame:EnableMouse(false)
+     healthWarningFrame:Hide()
+     healthWarningFrame:SetAlpha(1)
+
+     print("|cff00ff00OutOfHealz:|r Warning frames locked.")
     elseif msg == "reset" then
+        OutOfHealzDB.point = "CENTER"
+        OutOfHealzDB.relativePoint = "CENTER"
+        OutOfHealzDB.xOfs = 0
+        OutOfHealzDB.yOfs = 200
+
         warningFrame:ClearAllPoints()
         warningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 200)
-        print("|cff00ff00OutOfHealz:|r Frame reset to center.")
+
+        OutOfHealzDB.healthPoint = "CENTER"
+        OutOfHealzDB.healthRelativePoint = "CENTER"
+        OutOfHealzDB.healthXOfs = 0
+        OutOfHealzDB.healthYOfs = 90
+
+        healthWarningFrame:ClearAllPoints()
+        healthWarningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 90)
+
+        print("|cff00ff00OutOfHealz:|r Warning frames reset.")
     elseif msg == "config" or msg == "options" or msg == "settings" then
         if Settings and Settings.OpenToCategory then
             Settings.OpenToCategory(OutOfHealzSettingsCategory.ID)

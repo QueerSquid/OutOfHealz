@@ -141,11 +141,75 @@ pvpCheckbox:SetScript("OnClick", function(self)
 end)
 
 --------------------------------------------------
+-- Health Warning Section
+--------------------------------------------------
+
+local healthWarningHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+healthWarningHeader:SetPoint("TOPLEFT", pvpCheckbox, "BOTTOMLEFT", 0, -24)
+healthWarningHeader:SetText("Health Warning")
+
+local healthWarningCheckbox = CreateCheckbox(
+    optionsPanel,
+    "OutOfHealzHealthWarningCheckbox",
+    "Enable Low Health Warning",
+    "Display a warning when your health falls below the configured threshold.",
+    healthWarningHeader,
+    0,
+    -10
+)
+
+healthWarningCheckbox:SetChecked(
+    OutOfHealzDB and OutOfHealzDB.healthWarningEnabled
+)
+
+healthWarningCheckbox:SetScript("OnClick", function(self)
+    OutOfHealzDB.healthWarningEnabled = self:GetChecked()
+
+    if OutOfHealz_UpdateHealthWarning then
+        OutOfHealz_UpdateHealthWarning()
+    end
+end)
+
+local healthThresholdSlider = CreateSlider(
+    optionsPanel,
+    "OutOfHealzHealthThresholdSlider",
+    "Low Health Threshold",
+    10,
+    75,
+    5,
+    healthWarningCheckbox,
+    0,
+    -24
+)
+
+healthThresholdSlider:SetValue(
+    OutOfHealzDB.healthThreshold or 35
+)
+
+healthThresholdSlider.valueText:SetText(
+    "Current Threshold: " .. tostring(OutOfHealzDB.healthThreshold or 35) .. "%"
+)
+
+healthThresholdSlider:SetScript("OnValueChanged", function(self, value)
+    value = math.floor(value + 0.5)
+
+    OutOfHealzDB.healthThreshold = value
+
+    healthThresholdSlider.valueText:SetText(
+        "Current Threshold: " .. value .. "%"
+    )
+
+    if OutOfHealz_UpdateHealthWarning then
+        OutOfHealz_UpdateHealthWarning()
+    end
+end)
+
+--------------------------------------------------
 -- Warning Frame Section
 --------------------------------------------------
 
 local warningFrameHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-warningFrameHeader:SetPoint("TOPLEFT", pvpCheckbox, "BOTTOMLEFT", 0, -24)
+warningFrameHeader:SetPoint("TOPLEFT", healthThresholdSlider, "BOTTOMLEFT", 0, -40)
 warningFrameHeader:SetText("Warning Frame")
 
 local scaleSlider = CreateSlider(
@@ -172,14 +236,34 @@ scaleSlider:SetScript("OnValueChanged", function(self, value)
     if OutOfHealzWarningFrame then
         OutOfHealzWarningFrame:SetScale(value)
     end
+
+    if OutOfHealzHealthWarningFrame then
+        OutOfHealzHealthWarningFrame:SetScale(value)
+    end
 end)
 
 optionsPanel:SetScript("OnShow", function()
     soundCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.soundEnabled)
     instanceCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.instanceOnly)
     pvpCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.pvpEnabled)
+
+    healthWarningCheckbox:SetChecked(
+        OutOfHealzDB and OutOfHealzDB.healthWarningEnabled
+    )
+
+    healthThresholdSlider:SetValue(
+        OutOfHealzDB.healthThreshold or 35
+    )
+
+    healthThresholdSlider.valueText:SetText(
+        "Current Threshold: " .. tostring(OutOfHealzDB.healthThreshold or 35) .. "%"
+    )
+
     scaleSlider:SetValue(OutOfHealzDB.warningScale or 1)
-    scaleSlider.valueText:SetText("Current Scale: " .. string.format("%.0f%%", (OutOfHealzDB.warningScale or 1) * 100))
+
+    scaleSlider.valueText:SetText(
+        "Current Scale: " .. string.format("%.0f%%", (OutOfHealzDB.warningScale or 1) * 100)
+    )
 end)
 
 --------------------------------------------------
