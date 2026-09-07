@@ -204,12 +204,34 @@ healthThresholdSlider:SetScript("OnValueChanged", function(self, value)
     end
 end)
 
+local healthPotionCheckbox = CreateCheckbox(
+    optionsPanel,
+    "OutOfHealzHealthPotionCheckbox",
+    "Enable Health Potion Reminder",
+    "Show a clickable healing potion reminder when you fall below the configured low health threshold.",
+    healthThresholdSlider,
+    0,
+    -28
+)
+
+healthPotionCheckbox:SetChecked(
+    OutOfHealzDB and OutOfHealzDB.healthPotionWarningEnabled
+)
+
+healthPotionCheckbox:SetScript("OnClick", function(self)
+    OutOfHealzDB.healthPotionWarningEnabled = self:GetChecked()
+
+    if OutOfHealz_UpdatePotionWarning then
+        OutOfHealz_UpdatePotionWarning()
+    end
+end)
+
 --------------------------------------------------
 -- Warning Frame Section
 --------------------------------------------------
 
 local warningFrameHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-warningFrameHeader:SetPoint("TOPLEFT", healthThresholdSlider, "BOTTOMLEFT", 0, -40)
+warningFrameHeader:SetPoint("TOPLEFT", healthPotionCheckbox, "BOTTOMLEFT", 0, -32)
 warningFrameHeader:SetText("Warning Frame")
 
 local scaleSlider = CreateSlider(
@@ -240,6 +262,10 @@ scaleSlider:SetScript("OnValueChanged", function(self, value)
     if OutOfHealzHealthWarningFrame then
         OutOfHealzHealthWarningFrame:SetScale(value)
     end
+
+    if OutOfHealzHealthPotionFrame then
+        OutOfHealzHealthPotionFrame:SetScale(value)
+    end
 end)
 
 optionsPanel:SetScript("OnShow", function()
@@ -257,6 +283,10 @@ optionsPanel:SetScript("OnShow", function()
 
     healthThresholdSlider.valueText:SetText(
         "Current Threshold: " .. tostring(OutOfHealzDB.healthThreshold or 35) .. "%"
+    )
+
+    healthPotionCheckbox:SetChecked(
+        OutOfHealzDB and OutOfHealzDB.healthPotionWarningEnabled
     )
 
     scaleSlider:SetValue(OutOfHealzDB.warningScale or 1)

@@ -36,6 +36,26 @@ if OutOfHealzDB.healthThreshold == nil then
     OutOfHealzDB.healthThreshold = 35
 end
 
+if OutOfHealzDB.healthPotionWarningEnabled == nil then
+    OutOfHealzDB.healthPotionWarningEnabled = true
+end
+
+if OutOfHealzDB.healthPotionPoint == nil then
+    OutOfHealzDB.healthPotionPoint = "BOTTOMLEFT"
+end
+
+if OutOfHealzDB.healthPotionRelativePoint == nil then
+    OutOfHealzDB.healthPotionRelativePoint = "BOTTOMLEFT"
+end
+
+if OutOfHealzDB.healthPotionXOfs == nil then
+    OutOfHealzDB.healthPotionXOfs = 460
+end
+
+if OutOfHealzDB.healthPotionYOfs == nil then
+    OutOfHealzDB.healthPotionYOfs = 265
+end
+
 if OutOfHealzDB.healthPoint == nil then
     OutOfHealzDB.healthPoint = "CENTER"
 end
@@ -75,6 +95,16 @@ local cookieSound = "Interface\\AddOns\\OutOfHealz\\Media\\cookie_nom_warning.og
 local dangerSound = "Interface\\AddOns\\OutOfHealz\\Media\\Get_Over_Here.ogg"
 local lastSoundTime = 0
 local soundCooldown = 6
+
+local supportedHealthPotions = {
+    271884, -- Concentrated Silvermoon Health Potion, higher quality
+    271883, -- Concentrated Silvermoon Health Potion, lower quality
+    241304, -- Silvermoon Health Potion, higher quality
+    241305, -- Silvermoon Health Potion, lower quality
+    258138, -- Potent Healing Potion
+}
+
+local selectedHealthPotionID = nil
 
 --------------------------------------------------
 -- Warning Frame
@@ -145,6 +175,79 @@ healthWarningFrame:SetScript("OnUpdate", function(self, elapsed)
 end)
 
 --------------------------------------------------
+-- Health Potion Reminder
+--------------------------------------------------
+
+local healthPotionFrame = CreateFrame(
+    "Frame",
+    "OutOfHealzHealthPotionFrame",
+    UIParent
+)
+
+healthPotionFrame:SetSize(140, 72)
+healthPotionFrame:SetScale(OutOfHealzDB.warningScale or 1)
+
+healthPotionFrame:SetPoint(
+    OutOfHealzDB.healthPotionPoint or "CENTER",
+    UIParent,
+    OutOfHealzDB.healthPotionRelativePoint or "CENTER",
+    OutOfHealzDB.healthPotionXOfs or 0,
+    OutOfHealzDB.healthPotionYOfs or 0
+)
+
+healthPotionFrame:SetFrameStrata("FULLSCREEN_DIALOG")
+healthPotionFrame:Hide()
+
+local potionLabel = healthPotionFrame:CreateFontString(nil, "OVERLAY")
+potionLabel:SetFont("Fonts\\FRIZQT__.TTF", 26, "OUTLINE")
+potionLabel:SetPoint("LEFT", healthPotionFrame, "LEFT", 4, 0)
+potionLabel:SetText("USE")
+potionLabel:SetTextColor(1, 1, 1, 1)
+
+local potionIcon = healthPotionFrame:CreateTexture(nil, "ARTWORK")
+potionIcon:SetSize(56, 56)
+potionIcon:SetPoint("RIGHT", healthPotionFrame, "RIGHT", -4, 0)
+potionIcon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+
+local potionBorder = healthPotionFrame:CreateTexture(nil, "OVERLAY")
+potionBorder:SetTexture("Interface\\Buttons\\UI-Quickslot2")
+potionBorder:SetPoint("TOPLEFT", potionIcon, "TOPLEFT", -8, 8)
+potionBorder:SetPoint("BOTTOMRIGHT", potionIcon, "BOTTOMRIGHT", 8, -8)
+
+local potionCooldown = CreateFrame(
+    "Cooldown",
+    nil,
+    healthPotionFrame,
+    "CooldownFrameTemplate"
+)
+
+potionCooldown:SetSize(56, 56)
+potionCooldown:SetPoint("CENTER", potionIcon, "CENTER")
+
+local potionButton = CreateFrame(
+    "Button",
+    "OutOfHealzHealthPotionButton",
+    UIParent,
+    "SecureActionButtonTemplate"
+)
+
+potionButton:SetSize(56, 56)
+potionButton:SetFrameStrata("FULLSCREEN_DIALOG")
+potionButton:RegisterForClicks("AnyUp", "AnyDown")
+
+potionButton:SetScript("OnEnter", function(self)
+    if selectedHealthPotionID then
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetItemByID(selectedHealthPotionID)
+        GameTooltip:Show()
+    end
+end)
+
+potionButton:SetScript("OnLeave", function()
+    GameTooltip:Hide()
+end)
+
+--------------------------------------------------
 -- Helper Functions
 --------------------------------------------------
 
@@ -153,6 +256,61 @@ local function ResetWarningState()
     stageThreeTriggered = false
     outlineText:SetText("OUT OF HEAL RANGE")
     warningText:SetText("OUT OF HEAL RANGE")
+end
+
+local function FindBestHealthPotion()
+    for _, itemID in ipairs(supportedHealthPotions) do
+        local count = C_Item.GetItemCount(itemID, false, false, false)
+
+        if count and count > 0 then
+            return itemID
+        end
+    end
+
+    return nil
+end
+
+local function ConfigureHealthPotion()
+    if InCombatLockdown() then
+        return
+    end
+
+    selectedHealthPotionID = FindBestHealthPotion()
+
+    if not selectedHealthPotionID then
+        potionButton:SetAttribute("type", nil)
+        potionButton:SetAttribute("item", nil)
+        potionIcon:SetTexture(nil)
+        potionButton:Hide()
+        return
+    end
+
+    potionButton:SetAttribute("type", "item")
+    potionButton:SetAttribute(
+        "item",
+        "item:" .. selectedHealthPotionID
+    )
+
+    local itemIcon = C_Item.GetItemIconByID(selectedHealthPotionID)
+
+    if itemIcon then
+        potionIcon:SetTexture(itemIcon)
+    end
+
+    potionButton:ClearAllPoints()
+    potionButton:SetPoint(
+        OutOfHealzDB.healthPotionPoint or "CENTER",
+        UIParent,
+        OutOfHealzDB.healthPotionRelativePoint or "CENTER",
+        (OutOfHealzDB.healthPotionXOfs or 0) + 38,
+        OutOfHealzDB.healthPotionYOfs or 0
+    )
+
+    if OutOfHealzDB.healthPotionWarningEnabled then
+        potionButton:Show()
+    else
+        potionButton:Hide()
+    end
 end
 
 local healthThresholdCurve = nil
@@ -213,7 +371,107 @@ local function IsHealthWarningAllowed()
     return true
 end
 
+local function IsPotionWarningAllowed()
+    if not OutOfHealzDB.healthPotionWarningEnabled then
+        return false
+    end
+
+    if not InCombatLockdown() then
+        return false
+    end
+
+    if not selectedHealthPotionID then
+        return false
+    end
+
+    if OutOfHealzDB.instanceOnly then
+        local inInstance, instanceType = IsInInstance()
+
+        if not inInstance or (instanceType ~= "party" and instanceType ~= "raid") then
+            return false
+        end
+    end
+
+    return true
+end
+
+local function IsSelectedPotionReady()
+    if not selectedHealthPotionID then
+        return false
+    end
+
+    local count = C_Item.GetItemCount(
+        selectedHealthPotionID,
+        false,
+        false,
+        false
+    )
+
+    if not count or count <= 0 then
+        return false
+    end
+
+    local startTime, duration, enableCooldownTimer =
+        C_Item.GetItemCooldown(selectedHealthPotionID)
+
+    if not enableCooldownTimer then
+        return false
+    end
+
+    if duration and duration > 0 then
+        local remaining = (startTime + duration) - GetTime()
+
+        if remaining > 0 then
+            return false
+        end
+    end
+
+    return true
+end
+
+local function UpdatePotionWarning()
+    if isFrameUnlocked then
+        healthPotionFrame:Show()
+        healthPotionFrame:SetAlpha(1)
+        return
+    end
+
+    if not IsPotionWarningAllowed() then
+        healthPotionFrame:Hide()
+        healthPotionFrame:SetAlpha(1)
+        return
+    end
+
+    if not IsSelectedPotionReady() then
+        healthPotionFrame:Hide()
+        healthPotionFrame:SetAlpha(1)
+        return
+    end
+
+    local curve = GetHealthThresholdCurve()
+
+    local color = UnitHealthPercent(
+        "player",
+        true,
+        curve
+    )
+
+    healthPotionFrame:Show()
+
+    healthPotionFrame:SetAlpha(
+        select(4, color:GetRGBA())
+    )
+end
+
+OutOfHealz_UpdatePotionWarning = UpdatePotionWarning
+
 local function UpdateHealthWarning()
+    if isFrameUnlocked then
+        healthWarningFrame:Show()
+        healthWarningFrame:SetAlpha(1)
+        return
+    end
+
     if not IsHealthWarningAllowed() then
         healthWarningFrame:Hide()
         healthWarningFrame:SetAlpha(1)
@@ -291,6 +549,38 @@ healthWarningFrame:SetScript("OnDragStop", function(self)
     print("|cff00ff00OutOfHealz:|r Health warning position saved.")
 end)
 
+healthPotionFrame:SetMovable(true)
+healthPotionFrame:EnableMouse(false)
+healthPotionFrame:RegisterForDrag("LeftButton")
+
+healthPotionFrame:SetScript("OnDragStart", function(self)
+    self:StartMoving()
+end)
+
+healthPotionFrame:SetScript("OnDragStop", function(self)
+    self:StopMovingOrSizing()
+
+    local point, _, relativePoint, xOfs, yOfs = self:GetPoint()
+
+    OutOfHealzDB.healthPotionPoint = point
+    OutOfHealzDB.healthPotionRelativePoint = relativePoint
+    OutOfHealzDB.healthPotionXOfs = xOfs
+    OutOfHealzDB.healthPotionYOfs = yOfs
+
+    if not InCombatLockdown() then
+        potionButton:ClearAllPoints()
+        potionButton:SetPoint(
+            point,
+            UIParent,
+            relativePoint,
+            xOfs + 38,
+            yOfs
+        )
+    end
+
+    print("|cff00ff00OutOfHealz:|r Health potion reminder position saved.")
+end)
+
 --------------------------------------------------
 -- Healer Detection
 --------------------------------------------------
@@ -342,14 +632,24 @@ healthEventFrame:RegisterEvent("PLAYER_REGEN_DISABLED")
 healthEventFrame:RegisterEvent("PLAYER_REGEN_ENABLED")
 healthEventFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
 healthEventFrame:RegisterEvent("ZONE_CHANGED_NEW_AREA")
+healthEventFrame:RegisterEvent("BAG_UPDATE_DELAYED")
+healthEventFrame:RegisterEvent("BAG_UPDATE_COOLDOWN")
+healthEventFrame:RegisterEvent("SPELL_UPDATE_COOLDOWN")
 
 healthEventFrame:SetScript("OnEvent", function(self, event, unit)
     if unit and unit ~= "player" then
         return
     end
 
+    if not InCombatLockdown() then
+        ConfigureHealthPotion()
+    end
+
     UpdateHealthWarning()
+    UpdatePotionWarning()
 end)
+
+ConfigureHealthPotion()
 
 --------------------------------------------------
 -- Core Detection Logic
@@ -363,6 +663,8 @@ frame:SetScript("OnUpdate", function(self, elapsed)
     end
 
     lastCheck = now
+
+    UpdatePotionWarning()
 
     if not InCombatLockdown() then
         ResetWarningState()
@@ -467,24 +769,43 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         isFrameUnlocked = true
 
         warningFrame:Show()
-     warningFrame:EnableMouse(true)
+        warningFrame:EnableMouse(true)
 
-     healthWarningFrame:Show()
+        healthWarningFrame:Show()
         healthWarningFrame:SetAlpha(1)
-     healthWarningFrame:EnableMouse(true)
+        healthWarningFrame:EnableMouse(true)
 
-     print("|cff00ff00OutOfHealz:|r Warning frames unlocked. Drag to move.")
+        healthPotionFrame:Show()
+        healthPotionFrame:SetAlpha(1)
+        healthPotionFrame:EnableMouse(true)
+
+        if not InCombatLockdown() then
+            potionButton:Hide()
+        end
+
+        print("|cff00ff00OutOfHealz:|r Warning frames unlocked. Drag to move.")
     elseif msg == "lock" then
         isFrameUnlocked = false
 
-     warningFrame:EnableMouse(false)
-     warningFrame:Hide()
+        warningFrame:EnableMouse(false)
+        warningFrame:Hide()
 
-     healthWarningFrame:EnableMouse(false)
-     healthWarningFrame:Hide()
-     healthWarningFrame:SetAlpha(1)
+        healthWarningFrame:EnableMouse(false)
+        healthWarningFrame:Hide()
+        healthWarningFrame:SetAlpha(1)
 
-     print("|cff00ff00OutOfHealz:|r Warning frames locked.")
+        healthPotionFrame:EnableMouse(false)
+        healthPotionFrame:Hide()
+        healthPotionFrame:SetAlpha(1)
+
+        if not InCombatLockdown() then
+            ConfigureHealthPotion()
+        end
+
+        UpdateHealthWarning()
+        UpdatePotionWarning()
+
+        print("|cff00ff00OutOfHealz:|r Warning frames locked.")
     elseif msg == "reset" then
         OutOfHealzDB.point = "CENTER"
         OutOfHealzDB.relativePoint = "CENTER"
@@ -501,6 +822,19 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
 
         healthWarningFrame:ClearAllPoints()
         healthWarningFrame:SetPoint("CENTER", UIParent, "CENTER", 0, 90)
+
+        OutOfHealzDB.healthPotionPoint = "BOTTOMLEFT"
+        OutOfHealzDB.healthPotionRelativePoint = "BOTTOMLEFT"
+        OutOfHealzDB.healthPotionXOfs = 460
+        OutOfHealzDB.healthPotionYOfs = 265
+
+        healthPotionFrame:ClearAllPoints()
+        healthPotionFrame:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 460, 265)
+
+        if not InCombatLockdown() then
+            potionButton:ClearAllPoints()
+            potionButton:SetPoint("BOTTOMLEFT", UIParent, "BOTTOMLEFT", 498, 265)
+        end
 
         print("|cff00ff00OutOfHealz:|r Warning frames reset.")
     elseif msg == "config" or msg == "options" or msg == "settings" then
