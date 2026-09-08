@@ -1,8 +1,8 @@
 ## Interface: 120100
-## Title: OutOfHealz
-## Notes: Combat healer range warning addon with visual and audio alerts.
+## Title: OutOfHealz: Survivability Assistant
+## Notes: Lightweight combat survivability assistant with positioning, health, and consumable awareness.
 ## Author: QueerSquid
-## Version: 1.1.0
+## Version: 1.2.0
 ## SavedVariables: OutOfHealzDB
 
 Libs\LibStub-1.0\LibStub.lua

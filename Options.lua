@@ -59,7 +59,9 @@ subtitle:SetText("Healer range awareness and survivability warnings.")
 
 local version = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontDisable")
 version:SetPoint("TOPLEFT", subtitle, "BOTTOMLEFT", 0, -8)
-version:SetText("Version 1.1.0")
+
+local addonVersion = C_AddOns.GetAddOnMetadata(addonName, "Version") or "Unknown"
+version:SetText("Version " .. addonVersion)
 
 local info = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
 info:SetPoint("TOPLEFT", version, "BOTTOMLEFT", 0, -20)
@@ -226,12 +228,34 @@ healthPotionCheckbox:SetScript("OnClick", function(self)
     end
 end)
 
+local healthstoneCheckbox = CreateCheckbox(
+    optionsPanel,
+    "OutOfHealzHealthstoneCheckbox",
+    "Enable Healthstone Reminder",
+    "Show a clickable Healthstone reminder when you fall below the configured low health threshold.",
+    healthPotionCheckbox,
+    0,
+    -8
+)
+
+healthstoneCheckbox:SetChecked(
+    OutOfHealzDB and OutOfHealzDB.healthstoneWarningEnabled
+)
+
+healthstoneCheckbox:SetScript("OnClick", function(self)
+    OutOfHealzDB.healthstoneWarningEnabled = self:GetChecked()
+
+    if OutOfHealz_UpdateHealthstoneWarning then
+        OutOfHealz_UpdateHealthstoneWarning()
+    end
+end)
+
 --------------------------------------------------
 -- Warning Frame Section
 --------------------------------------------------
 
 local warningFrameHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-warningFrameHeader:SetPoint("TOPLEFT", healthPotionCheckbox, "BOTTOMLEFT", 0, -32)
+warningFrameHeader:SetPoint("TOPLEFT", healthstoneCheckbox, "BOTTOMLEFT", 0, -32)
 warningFrameHeader:SetText("Warning Frame")
 
 local scaleSlider = CreateSlider(
@@ -266,6 +290,10 @@ scaleSlider:SetScript("OnValueChanged", function(self, value)
     if OutOfHealzHealthPotionFrame then
         OutOfHealzHealthPotionFrame:SetScale(value)
     end
+
+    if OutOfHealzHealthstoneFrame then
+        OutOfHealzHealthstoneFrame:SetScale(value)
+    end
 end)
 
 optionsPanel:SetScript("OnShow", function()
@@ -287,6 +315,10 @@ optionsPanel:SetScript("OnShow", function()
 
     healthPotionCheckbox:SetChecked(
         OutOfHealzDB and OutOfHealzDB.healthPotionWarningEnabled
+    )
+
+    healthstoneCheckbox:SetChecked(
+        OutOfHealzDB and OutOfHealzDB.healthstoneWarningEnabled
     )
 
     scaleSlider:SetValue(OutOfHealzDB.warningScale or 1)
