@@ -878,9 +878,10 @@ end)
 -- Healer Detection
 --------------------------------------------------
 
-local function IsHealerInRange()
-    local healerInRange = false
+local function GetHealerRangeState()
     local healerCount = 0
+    local anyHealerInRange = false
+    local anyHealerUnknown = false
 
     local function CheckUnit(unit)
         if UnitExists(unit)
@@ -891,12 +892,22 @@ local function IsHealerInRange()
             healerCount = healerCount + 1
 
             local minRange, maxRange = RangeCheck:GetRange(unit)
-            -- print("Debug:", InCombatLockdown(), unit, UnitName(unit), tostring(inRange))
-            -- print("RangeCheck:", unit, minRange, maxRange)
 
+            -- Definitely in range:
+            -- the entire estimated range is at or below 40 yards.
             if maxRange and maxRange <= 40 then
-                 healerInRange = true
+                anyHealerInRange = true
+                return
             end
+
+            -- Definitely out of range:
+            -- LibRangeCheck has established the healer is beyond 40 yards.
+            if minRange and minRange >= 40 then
+                return
+            end
+
+            -- Anything else is ambiguous, such as 0-46 or nil/nil.
+            anyHealerUnknown = true
         end
     end
 
@@ -910,7 +921,15 @@ local function IsHealerInRange()
         end
     end
 
-    return healerInRange, healerCount
+    if healerCount == 0 then
+        return "NO_HEALERS", healerCount
+    elseif anyHealerInRange then
+        return "IN_RANGE", healerCount
+    elseif anyHealerUnknown then
+        return "UNKNOWN", healerCount
+    else
+        return "OUT_OF_RANGE", healerCount
+    end
 end
 
 --------------------------------------------------
@@ -984,16 +1003,21 @@ frame:SetScript("OnUpdate", function(self, elapsed)
         end
     end
 
-    local inRange, totalHealers = IsHealerInRange()
+    local healerRangeState, totalHealers = GetHealerRangeState()
 
     local currentState
 
-    if totalHealers == 0 then
+    if healerRangeState == "NO_HEALERS" then
         currentState = "NO HEALERS DETECTED"
-    elseif inRange then
+
+    elseif healerRangeState == "IN_RANGE" then
         currentState = "HEALER IN RANGE"
-    else
+
+    elseif healerRangeState == "OUT_OF_RANGE" then
         currentState = "OUT OF HEAL RANGE"
+
+    else
+        currentState = "HEALER RANGE UNKNOWN"
     end
 
     if currentState == "OUT OF HEAL RANGE" then
