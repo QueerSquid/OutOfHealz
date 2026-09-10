@@ -16,7 +16,7 @@ OutOfHealz does not attempt to replace encounter addons, rotation helpers, or pl
 
 ### Healer Range Warning
 
-OutOfHealz detects whether a healer is within range while you are in combat.
+OutOfHealz monitors healer range while you are in combat and warns when it can confirm that no detected healer is within healing range.
 
 Warnings escalate the longer you remain outside healer range:
 
@@ -188,6 +188,8 @@ OutOfHealz is intentionally focused on survivability rather than damage optimiza
 * All configuration options are available through the Blizzard AddOns settings panel or `/ooh config`.
 * Slash commands remain fully supported.
 * LibRangeCheck-3.0 is used for combat-safe healer range detection due to Blizzard API limitations.
+* Healer range information may become less precise during combat due to World of Warcraft API restrictions. When OutOfHealz cannot reliably determine healer range, it reports `HEALER RANGE UNKNOWN` in chat and suppresses out-of-range warnings rather than generating a potentially false alert.
+* No healer-range warning means OutOfHealz has not confirmed that you are out of healer range; it does not necessarily guarantee that a healer is within range.
 * Health Potion and Healthstone reminders use secure action buttons so consumables can be clicked during combat.
 * Due to WoW combat-lockdown and secret-health restrictions, consumable click regions cannot be dynamically enabled or disabled based on health while combat is active. Position the consumable reminder cluster somewhere that does not interfere with important UI elements or world interaction.
 * Regular Healthstone functionality has been validated in live gameplay, including combat use, cooldown behavior, independent triggering, and inventory depletion.
