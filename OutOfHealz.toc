@@ -1,8 +1,8 @@
-## Interface: 120100
+## Interface: 120105
 ## Title: OutOfHealz: Survivability Assistant
 ## Notes: Lightweight combat survivability assistant with positioning, health, and consumable awareness.
 ## Author: QueerSquid
-## Version: 2.0.1
+## Version: 2.0.2
 ## SavedVariables: OutOfHealzDB
 
 Libs\LibStub-1.0\LibStub.lua

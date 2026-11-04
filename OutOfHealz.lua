@@ -117,11 +117,17 @@ local lastSoundTime = 0
 local soundCooldown = 6
 
 local supportedHealthPotions = {
+    -- Midnight
     271884, -- Concentrated Silvermoon Health Potion, higher quality
     271883, -- Concentrated Silvermoon Health Potion, lower quality
     241304, -- Silvermoon Health Potion, higher quality
     241305, -- Silvermoon Health Potion, lower quality
     258138, -- Potent Healing Potion
+
+    -- The War Within
+    211880, -- Algari Healing Potion, quality 3
+    211879, -- Algari Healing Potion, quality 2
+    211878, -- Algari Healing Potion, quality 1
 }
 
 local selectedHealthPotionID = nil
@@ -494,6 +500,14 @@ local function ConfigureHealthstone()
     end
 end
 
+OutOfHealz_GetSelectedHealthPotionID = function()
+    return selectedHealthPotionID
+end
+
+OutOfHealz_GetSelectedHealthstoneID = function()
+    return selectedHealthstoneID
+end
+
 local healthThresholdCurve = nil
 local healthThresholdCurveValue = nil
 
@@ -769,6 +783,81 @@ local function UpdateHealthWarning()
 end
 
 OutOfHealz_UpdateHealthWarning = UpdateHealthWarning
+
+--------------------------------------------------
+-- Temporary Health Debug
+--------------------------------------------------
+
+local function PrintHealthDebug()
+    local inInstance, instanceType = IsInInstance()
+
+    local potionCount = 0
+    local potionStart = 0
+    local potionDuration = 0
+    local potionEnabled = false
+
+    if selectedHealthPotionID then
+        potionCount = C_Item.GetItemCount(
+            selectedHealthPotionID,
+            false,
+            false,
+            false
+        ) or 0
+
+        potionStart, potionDuration, potionEnabled =
+            C_Item.GetItemCooldown(selectedHealthPotionID)
+    end
+
+    local healthstoneCount = 0
+    local healthstoneStart = 0
+    local healthstoneDuration = 0
+    local healthstoneEnabled = false
+
+    if selectedHealthstoneID then
+        healthstoneCount = C_Item.GetItemCount(
+            selectedHealthstoneID,
+            false,
+            false,
+            false
+        ) or 0
+
+        healthstoneStart, healthstoneDuration, healthstoneEnabled =
+            C_Item.GetItemCooldown(selectedHealthstoneID)
+    end
+
+    print("|cff00ff00OutOfHealz Health Debug|r")
+    print(
+        "Combat:", InCombatLockdown() and "YES" or "NO",
+        "| Instance:", inInstance and (instanceType or "YES") or "NO"
+    )
+
+    print(
+        "Low Health:",
+        OutOfHealzDB.healthWarningEnabled and "ON" or "OFF",
+        "| Threshold:", tostring(OutOfHealzDB.healthThreshold or 35) .. "%",
+        "| Frame:", healthWarningFrame:IsShown() and "SHOWN" or "HIDDEN"
+    )
+
+    print(
+        "Potion:",
+        OutOfHealzDB.healthPotionWarningEnabled and "ON" or "OFF",
+        "| ID:", tostring(selectedHealthPotionID),
+        "| Count:", tostring(potionCount),
+        "| CD:", tostring(potionDuration),
+        "| Ready:", IsSelectedPotionReady() and "YES" or "NO",
+        "| Frame:", healthPotionFrame:IsShown() and "SHOWN" or "HIDDEN"
+    )
+
+    print(
+        "Healthstone:",
+        OutOfHealzDB.healthstoneWarningEnabled and "ON" or "OFF",
+        "| ID:", tostring(selectedHealthstoneID),
+        "| Count:", tostring(healthstoneCount),
+        "| CD:", tostring(healthstoneDuration),
+        "| Ready:", IsSelectedHealthstoneReady() and "YES" or "NO",
+        "| Frame:", healthstoneFrame:IsShown() and "SHOWN" or "HIDDEN"
+    )
+end
 
 warningFrame:SetScript("OnUpdate", function(self, elapsed)
     flashTime = flashTime + elapsed
@@ -1219,6 +1308,9 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         else
             print("|cff00ff00OutOfHealz:|r Sound disabled.")
         end
+
+    elseif msg == "debughealth" then
+        PrintHealthDebug()
 
     else
         print("|cff00ff00OutOfHealz commands:|r")

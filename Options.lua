@@ -235,7 +235,7 @@ local healthstoneCheckbox = CreateCheckbox(
     "Show a clickable Healthstone reminder when you fall below the configured low health threshold.",
     healthPotionCheckbox,
     0,
-    -8
+    -24
 )
 
 healthstoneCheckbox:SetChecked(
@@ -250,12 +250,52 @@ healthstoneCheckbox:SetScript("OnClick", function(self)
     end
 end)
 
+local potionDetectedText = optionsPanel:CreateFontString(
+    nil, "ARTWORK", "GameFontHighlightSmall"
+)
+potionDetectedText:SetPoint(
+    "TOPLEFT", healthPotionCheckbox, "BOTTOMLEFT", 26, -2
+)
+potionDetectedText:SetText("Detected: None")
+
+local healthstoneDetectedText = optionsPanel:CreateFontString(
+    nil, "ARTWORK", "GameFontHighlightSmall"
+)
+healthstoneDetectedText:SetPoint(
+    "TOPLEFT", healthstoneCheckbox, "BOTTOMLEFT", 26, -2
+)
+healthstoneDetectedText:SetText("Detected: None")
+
+local function GetDetectedItemName(itemID)
+    if not itemID then
+        return "None"
+    end
+
+    return C_Item.GetItemNameByID(itemID) or ("Item " .. itemID)
+end
+
+local function UpdateDetectedConsumables()
+    local potionID = OutOfHealz_GetSelectedHealthPotionID
+        and OutOfHealz_GetSelectedHealthPotionID()
+    
+    local healthstoneID = OutOfHealz_GetSelectedHealthstoneID
+        and OutOfHealz_GetSelectedHealthstoneID()
+
+    potionDetectedText:SetText(
+        "Detected: " .. GetDetectedItemName(potionID)
+    )
+
+    healthstoneDetectedText:SetText(
+        "Detected: " .. GetDetectedItemName(healthstoneID)
+    )
+end
+
 --------------------------------------------------
 -- Warning Frame Section
 --------------------------------------------------
 
 local warningFrameHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-warningFrameHeader:SetPoint("TOPLEFT", healthstoneCheckbox, "BOTTOMLEFT", 0, -32)
+warningFrameHeader:SetPoint("TOPLEFT", healthstoneDetectedText, "BOTTOMLEFT", -26, -24)
 warningFrameHeader:SetText("Warning Frame")
 
 local scaleSlider = CreateSlider(
@@ -296,6 +336,17 @@ scaleSlider:SetScript("OnValueChanged", function(self, value)
     end
 end)
 
+local consumableStatusEvents = CreateFrame("Frame")
+consumableStatusEvents:RegisterEvent("BAG_UPDATE_DELAYED")
+consumableStatusEvents:RegisterEvent("PLAYER_REGEN_ENABLED")
+consumableStatusEvents:RegisterEvent("GET_ITEM_INFO_RECEIVED")
+
+consumableStatusEvents:SetScript("OnEvent", function()
+    if optionsPanel:IsShown() then
+        UpdateDetectedConsumables()
+    end
+end)
+
 optionsPanel:SetScript("OnShow", function()
     soundCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.soundEnabled)
     instanceCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.instanceOnly)
@@ -322,6 +373,7 @@ optionsPanel:SetScript("OnShow", function()
     )
 
     scaleSlider:SetValue(OutOfHealzDB.warningScale or 1)
+    UpdateDetectedConsumables()
 
     scaleSlider.valueText:SetText(
         "Current Scale: " .. string.format("%.0f%%", (OutOfHealzDB.warningScale or 1) * 100)

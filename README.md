@@ -41,7 +41,8 @@ A configurable low-health warning provides immediate visual feedback when your h
 When your health drops below the configured health threshold, OutOfHealz can display an actionable Health Potion reminder.
 
 - Detects the strongest supported Health Potion currently available
-- Only displays when a supported potion is available and ready
+- Supports Midnight and The War Within healing potions
+- Only displays when a supported potion is available and ready, prioritizing current season potions
 - Displays the potion's actual item icon
 - Item tooltip support
 - Secure click-to-use functionality during combat
@@ -83,6 +84,8 @@ Current options include:
 - Enable Health Potion Reminder
 - Enable Healthstone Reminder
 - Warning Scale
+- Displays the currently detected Health Potion and Healthstone names.
+- Refreshs detected consumable information when inventory or item data changes.
 
 The PvP option is currently reserved for future PvP-specific behavior.
 
@@ -106,6 +109,7 @@ The PvP option is currently reserved for future PvP-specific behavior.
 | `/ooh sound` | Toggle sound alerts |
 | `/ooh sound on` | Enable sound alerts |
 | `/ooh sound off` | Disable sound alerts |
+| `/ooh debughealth` | Display health warning, consumable, and cooldown diagnostic information |
 
 Full command aliases:
 
