@@ -69,15 +69,33 @@ info:SetText("Configure the options below to customize OutOfHealz.")
 info:SetJustifyH("LEFT")
 
 --------------------------------------------------
+-- Scrollable Settings Content
+--------------------------------------------------
+
+local scrollFrame = CreateFrame(
+    "ScrollFrame",
+    "OutOfHealzNativeScrollFrame",
+    optionsPanel,
+    "UIPanelScrollFrameTemplate"
+)
+
+scrollFrame:SetPoint("TOPLEFT", info, "BOTTOMLEFT", 0, -12)
+scrollFrame:SetPoint("BOTTOMRIGHT", optionsPanel, "BOTTOMRIGHT", -30, 12)
+
+local scrollContent = CreateFrame("Frame", nil, scrollFrame)
+scrollContent:SetSize(560, 850)
+scrollFrame:SetScrollChild(scrollContent)
+
+--------------------------------------------------
 -- Behavior Section
 --------------------------------------------------
 
-local behaviorHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-behaviorHeader:SetPoint("TOPLEFT", info, "BOTTOMLEFT", 0, -24)
+local behaviorHeader = scrollContent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+behaviorHeader:SetPoint("TOPLEFT", 0, -12)
 behaviorHeader:SetText("Behavior")
 
 local soundCheckbox = CreateCheckbox(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzSoundCheckbox",
     "Enable Sound Alerts",
     "Enable or disable OutOfHealz audio warnings.",
@@ -99,7 +117,7 @@ soundCheckbox:SetScript("OnClick", function(self)
 end)
 
 local instanceCheckbox = CreateCheckbox(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzInstanceCheckbox",
     "Instance Only",
     "Only enable OutOfHealz in dungeon and raid instances.",
@@ -121,7 +139,7 @@ instanceCheckbox:SetScript("OnClick", function(self)
 end)
 
 local pvpCheckbox = CreateCheckbox(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzPvPCheckbox",
     "Enable in PvP",
     "Allow OutOfHealz warnings in battlegrounds and arenas.",
@@ -143,15 +161,40 @@ pvpCheckbox:SetScript("OnClick", function(self)
 end)
 
 --------------------------------------------------
+-- Minimap Button Visibility
+--------------------------------------------------
+
+local minimapCheckbox = CreateFrame(
+    "CheckButton",
+    "OutOfHealzNativeMinimapCheckbox",
+    scrollContent,
+    "InterfaceOptionsCheckButtonTemplate"
+)
+
+minimapCheckbox:SetPoint("TOPLEFT", pvpCheckbox, "BOTTOMLEFT", 0, -10)
+minimapCheckbox.Text:SetText("Show Minimap Button")
+
+minimapCheckbox.tooltipText =
+    "Show or hide the OutOfHealz minimap launcher."
+
+minimapCheckbox:SetScript("OnClick", function(self)
+    OutOfHealzDB.showMinimapButton = self:GetChecked()
+
+    if OutOfHealz_UpdateMinimapButton then
+        OutOfHealz_UpdateMinimapButton()
+    end
+end)
+
+--------------------------------------------------
 -- Health Warning Section
 --------------------------------------------------
 
-local healthWarningHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
-healthWarningHeader:SetPoint("TOPLEFT", pvpCheckbox, "BOTTOMLEFT", 0, -24)
+local healthWarningHeader = scrollContent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+healthWarningHeader:SetPoint("TOPLEFT", minimapCheckbox, "BOTTOMLEFT", 0, -24)
 healthWarningHeader:SetText("Health Warning")
 
 local healthWarningCheckbox = CreateCheckbox(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzHealthWarningCheckbox",
     "Enable Low Health Warning",
     "Display a warning when your health falls below the configured threshold.",
@@ -173,7 +216,7 @@ healthWarningCheckbox:SetScript("OnClick", function(self)
 end)
 
 local healthThresholdSlider = CreateSlider(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzHealthThresholdSlider",
     "Low Health Threshold",
     10,
@@ -207,7 +250,7 @@ healthThresholdSlider:SetScript("OnValueChanged", function(self, value)
 end)
 
 local healthPotionCheckbox = CreateCheckbox(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzHealthPotionCheckbox",
     "Enable Health Potion Reminder",
     "Show a clickable healing potion reminder when you fall below the configured low health threshold.",
@@ -229,7 +272,7 @@ healthPotionCheckbox:SetScript("OnClick", function(self)
 end)
 
 local healthstoneCheckbox = CreateCheckbox(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzHealthstoneCheckbox",
     "Enable Healthstone Reminder",
     "Show a clickable Healthstone reminder when you fall below the configured low health threshold.",
@@ -250,7 +293,7 @@ healthstoneCheckbox:SetScript("OnClick", function(self)
     end
 end)
 
-local potionDetectedText = optionsPanel:CreateFontString(
+local potionDetectedText = scrollContent:CreateFontString(
     nil, "ARTWORK", "GameFontHighlightSmall"
 )
 potionDetectedText:SetPoint(
@@ -258,7 +301,7 @@ potionDetectedText:SetPoint(
 )
 potionDetectedText:SetText("Detected: None")
 
-local healthstoneDetectedText = optionsPanel:CreateFontString(
+local healthstoneDetectedText = scrollContent:CreateFontString(
     nil, "ARTWORK", "GameFontHighlightSmall"
 )
 healthstoneDetectedText:SetPoint(
@@ -294,12 +337,12 @@ end
 -- Warning Frame Section
 --------------------------------------------------
 
-local warningFrameHeader = optionsPanel:CreateFontString(nil, "ARTWORK", "GameFontNormal")
+local warningFrameHeader = scrollContent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
 warningFrameHeader:SetPoint("TOPLEFT", healthstoneDetectedText, "BOTTOMLEFT", -26, -24)
 warningFrameHeader:SetText("Warning Frame")
 
 local scaleSlider = CreateSlider(
-    optionsPanel,
+    scrollContent,
     "OutOfHealzScaleSlider",
     "Warning Scale",
     0.5,
@@ -334,6 +377,10 @@ scaleSlider:SetScript("OnValueChanged", function(self, value)
     if OutOfHealzHealthstoneFrame then
         OutOfHealzHealthstoneFrame:SetScale(value)
     end
+
+    if OutOfHealz_SyncConsumableButtons then
+        OutOfHealz_SyncConsumableButtons()
+    end
 end)
 
 local consumableStatusEvents = CreateFrame("Frame")
@@ -348,9 +395,19 @@ consumableStatusEvents:SetScript("OnEvent", function()
 end)
 
 optionsPanel:SetScript("OnShow", function()
+    scrollFrame:SetVerticalScroll(0)
+        -- Prevent both configuration interfaces from being visible.
+    if OutOfHealz_CloseSettings then
+        OutOfHealz_CloseSettings()
+    end
+
     soundCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.soundEnabled)
     instanceCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.instanceOnly)
     pvpCheckbox:SetChecked(OutOfHealzDB and OutOfHealzDB.pvpEnabled)
+
+    minimapCheckbox:SetChecked(
+        OutOfHealzDB.showMinimapButton ~= false
+    )
 
     healthWarningCheckbox:SetChecked(
         OutOfHealzDB and OutOfHealzDB.healthWarningEnabled

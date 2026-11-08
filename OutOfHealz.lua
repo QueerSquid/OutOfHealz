@@ -1166,8 +1166,94 @@ end)
 -- Slash Commands
 --------------------------------------------------
 
+
+--------------------------------------------------
+-- Warning Frame Lock / Unlock
+--------------------------------------------------
+
+local function UnlockWarningFrames()
+    isFrameUnlocked = true
+
+    warningFrame:Show()
+    warningFrame:EnableMouse(true)
+
+    healthWarningFrame:Show()
+    healthWarningFrame:SetAlpha(1)
+    healthWarningFrame:EnableMouse(true)
+
+    healthPotionFrame:Show()
+    healthPotionFrame:SetAlpha(1)
+    healthPotionFrame:EnableMouse(true)
+
+    healthstoneFrame:Show()
+    healthstoneFrame:SetAlpha(1)
+    healthstoneFrame:EnableMouse(true)
+
+    if not InCombatLockdown() then
+        potionButton:Hide()
+        healthstoneButton:Hide()
+    end
+
+    print("|cff00ff00OutOfHealz:|r Warning frames unlocked. Drag to move.")
+end
+
+local function LockWarningFrames()
+    isFrameUnlocked = false
+
+    warningFrame:EnableMouse(false)
+    warningFrame:Hide()
+
+    healthWarningFrame:EnableMouse(false)
+    healthWarningFrame:Hide()
+    healthWarningFrame:SetAlpha(1)
+
+    healthPotionFrame:EnableMouse(false)
+    healthPotionFrame:Hide()
+    healthPotionFrame:SetAlpha(1)
+
+    healthstoneFrame:EnableMouse(false)
+    healthstoneFrame:Hide()
+    healthstoneFrame:SetAlpha(1)
+
+    if not InCombatLockdown() then
+        ConfigureHealthPotion()
+        ConfigureHealthstone()
+    end
+
+    UpdateHealthWarning()
+    UpdatePotionWarning()
+    UpdateHealthstoneWarning()
+
+    print("|cff00ff00OutOfHealz:|r Warning frames locked.")
+end
+
+-- Reusable entry points for the settings interface.
+OutOfHealz_UnlockWarningFrames = UnlockWarningFrames
+OutOfHealz_LockWarningFrames = LockWarningFrames
+
+OutOfHealz_IsFrameUnlocked = function()
+    return isFrameUnlocked
+end
+
+
+
 SLASH_OUTOFHEALZ1 = "/outofhealz"
 SLASH_OUTOFHEALZ2 = "/ooh"
+
+
+--------------------------------------------------
+-- Unspaced Slash Command Aliases
+--------------------------------------------------
+
+SLASH_OUTOFHEALZ3 = "/oohconfig"
+SLASH_OUTOFHEALZ4 = "/oohsettings"
+SLASH_OUTOFHEALZ5 = "/oohoptions"
+SLASH_OUTOFHEALZ6 = "/oohunlock"
+SLASH_OUTOFHEALZ7 = "/oohlock"
+SLASH_OUTOFHEALZ8 = "/oohreset"
+SLASH_OUTOFHEALZ9 = "/oohnative"
+SLASH_OUTOFHEALZ10 = "/oohstandalone"
+
 
 SlashCmdList["OUTOFHEALZ"] = function(msg)
     msg = string.lower(strtrim(msg or ""))
@@ -1176,57 +1262,9 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         warningFrame:Hide()
         print("|cff00ff00OutOfHealz:|r Warning hidden.")
     elseif msg == "unlock" then
-        isFrameUnlocked = true
-
-        warningFrame:Show()
-        warningFrame:EnableMouse(true)
-
-        healthWarningFrame:Show()
-        healthWarningFrame:SetAlpha(1)
-        healthWarningFrame:EnableMouse(true)
-
-        healthPotionFrame:Show()
-        healthPotionFrame:SetAlpha(1)
-        healthPotionFrame:EnableMouse(true)
-
-        healthstoneFrame:Show()
-        healthstoneFrame:SetAlpha(1)
-        healthstoneFrame:EnableMouse(true)
-
-        if not InCombatLockdown() then
-            potionButton:Hide()
-            healthstoneButton:Hide()
-        end
-
-        print("|cff00ff00OutOfHealz:|r Warning frames unlocked. Drag to move.")
+        UnlockWarningFrames()
     elseif msg == "lock" then
-        isFrameUnlocked = false
-
-        warningFrame:EnableMouse(false)
-        warningFrame:Hide()
-
-        healthWarningFrame:EnableMouse(false)
-        healthWarningFrame:Hide()
-        healthWarningFrame:SetAlpha(1)
-
-        healthPotionFrame:EnableMouse(false)
-        healthPotionFrame:Hide()
-        healthPotionFrame:SetAlpha(1)
-
-        healthstoneFrame:EnableMouse(false)
-        healthstoneFrame:Hide()
-        healthstoneFrame:SetAlpha(1)
-
-        if not InCombatLockdown() then
-            ConfigureHealthPotion()
-            ConfigureHealthstone()
-        end
-
-        UpdateHealthWarning()
-        UpdatePotionWarning()
-        UpdateHealthstoneWarning()
-
-        print("|cff00ff00OutOfHealz:|r Warning frames locked.")
+        LockWarningFrames()
     elseif msg == "reset" then
         OutOfHealzDB.point = "CENTER"
         OutOfHealzDB.relativePoint = "CENTER"
@@ -1249,6 +1287,15 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         OutOfHealzDB.healthPotionXOfs = 385
         OutOfHealzDB.healthPotionYOfs = 135
 
+        healthPotionFrame:ClearAllPoints()
+        healthPotionFrame:SetPoint(
+            "BOTTOMLEFT",
+            UIParent,
+            "BOTTOMLEFT",
+            385,
+            135
+        )
+
         healthstoneFrame:ClearAllPoints()
         healthstoneFrame:SetPoint(
             "LEFT",
@@ -1264,22 +1311,24 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
 
         print("|cff00ff00OutOfHealz:|r Warning frames reset.")
     elseif msg == "config" or msg == "options" or msg == "settings" then
-        if Settings and Settings.OpenToCategory then
-            Settings.OpenToCategory(OutOfHealzSettingsCategory.ID)
-        else
-            InterfaceOptionsFrame_OpenToCategory("OutOfHealz")
-            InterfaceOptionsFrame_OpenToCategory("OutOfHealz")
+        if OutOfHealz_ToggleSettings then
+            OutOfHealz_ToggleSettings()
         end
-
+    elseif msg == "native" then
+        if OutOfHealz_OpenNativeSettings then
+            OutOfHealz_OpenNativeSettings()
+        end
+    elseif msg == "standalone" then
+        if OutOfHealz_OpenSettings then
+            OutOfHealz_OpenSettings()
+        end
     elseif string.sub(msg, 1, 8) == "instance" then
         local setting = string.match(msg, "^instance%s+(%S+)$")
 
         if setting == "on" then
             OutOfHealzDB.instanceOnly = true
-
         elseif setting == "off" then
             OutOfHealzDB.instanceOnly = false
-
         else
             OutOfHealzDB.instanceOnly = not OutOfHealzDB.instanceOnly
         end
@@ -1289,16 +1338,13 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         else
             print("|cff00ff00OutOfHealz:|r Instance-only mode disabled for testing.")
         end
-
     elseif string.sub(msg, 1, 5) == "sound" then
         local setting = string.match(msg, "^sound%s+(%S+)$")
 
         if setting == "on" then
             OutOfHealzDB.soundEnabled = true
-
         elseif setting == "off" then
             OutOfHealzDB.soundEnabled = false
-
         else
             OutOfHealzDB.soundEnabled = not OutOfHealzDB.soundEnabled
         end
@@ -1308,24 +1354,45 @@ SlashCmdList["OUTOFHEALZ"] = function(msg)
         else
             print("|cff00ff00OutOfHealz:|r Sound disabled.")
         end
-
     elseif msg == "debughealth" then
         PrintHealthDebug()
-
     else
         print("|cff00ff00OutOfHealz commands:|r")
         print("/ooh hide - Hide warning")
-        print("/ooh unlock - Unlock and move warning frame")
+        print("/ooh unlock - Move warning frame")
         print("/ooh lock - Lock warning frame")
-        print("/ooh reset - Reset warning frame to center")
-        print("/ooh instance - Toggle instance-only mode")
-        print("/ooh instance on - Enable instance-only mode")
-        print("/ooh instance off - Disable instance-only mode")
-        print("/ooh sound - Toggle sound alerts")
-        print("/ooh sound on - Enable sound alerts")
-        print("/ooh sound off - Disable sound alerts")
-        print("/ooh config - Open options")
-        print("/ooh options - Open options")
-        print("/ooh settings - Open options")
+        print("/ooh reset - Reset frame positions")
+        print("/ooh config - Open standalone settings")
+        print("/ooh native - Open Blizzard settings")
+    end
+end
+
+
+--------------------------------------------------
+-- Unspaced Alias Forwarding
+--------------------------------------------------
+
+local originalCommandHandler = SlashCmdList["OUTOFHEALZ"]
+
+local aliases = {
+    ["/oohconfig"] = "config",
+    ["/oohsettings"] = "settings",
+    ["/oohoptions"] = "options",
+    ["/oohnative"] = "native",
+    ["/oohstandalone"] = "standalone",
+    ["/oohunlock"] = "unlock",
+    ["/oohlock"] = "lock",
+    ["/oohreset"] = "reset"
+}
+
+SlashCmdList["OUTOFHEALZ"] = function(msg, editBox)
+    local command = editBox and editBox:GetText() or ""
+    local slashCommand = command:match("^(%S+)")
+    local forwardedCommand = aliases[string.lower(slashCommand or "")]
+
+    if forwardedCommand then
+        originalCommandHandler(forwardedCommand)
+    else
+        originalCommandHandler(msg)
     end
 end
