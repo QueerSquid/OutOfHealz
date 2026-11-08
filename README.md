@@ -62,30 +62,36 @@ OutOfHealz can also detect and recommend available Healthstones.
 
 ### Consumable Reminder Cluster
 
-Health Potion and Healthstone reminders are grouped into a single movable survivability cluster.
+Health Potion and Healthstone reminders are grouped into a shared survivability cluster.
 
 - Consistent spacing at different UI scales
-- Shared positioning
+- Shared positioning through the Health Potion reminder
 - Persistent position between sessions
 - Supports reset and unlock commands
 - Secure combat actions remain separated from visual warning frames
 
 ### Configuration
 
-OutOfHealz integrates with the Blizzard AddOns Settings interface.
+OutOfHealz provides two configuration interfaces:
+
+- A standalone settings window with General, Health, Consumables, and Display sections.
+- A native Blizzard AddOns settings panel.
+
+The standalone window automatically previews warning frames while configuration is open. A draggable minimap launcher provides quick access to both interfaces.
 
 Current options include:
 
 - Enable Sound Alerts
 - Instance Only
 - Enable in PvP
+- Show Minimap Button
 - Enable Low Health Warning
 - Low Health Threshold
 - Enable Health Potion Reminder
 - Enable Healthstone Reminder
 - Warning Scale
-- Displays the currently detected Health Potion and Healthstone names.
-- Refreshs detected consumable information when inventory or item data changes.
+- Display currently detected Health Potion and Healthstone names
+- Refresh detected consumable information when inventory or item data changes
 
 The PvP option is currently reserved for future PvP-specific behavior.
 
@@ -96,13 +102,13 @@ The PvP option is currently reserved for future PvP-specific behavior.
 | Command | Function |
 |----------|----------|
 | `/ooh` | Display available commands |
-| `/ooh config` | Open the OutOfHealz options panel |
-| `/ooh options` | Open the OutOfHealz options panel |
-| `/ooh settings` | Open the OutOfHealz options panel |
-| `/ooh hide` | Hide the warning frame |
-| `/ooh unlock` | Unlock and move the warning frame |
-| `/ooh lock` | Lock the warning frame |
-| `/ooh reset` | Reset the warning frame position |
+| `/ooh config` | Open the standalone settings window |
+| `/ooh options` | Open the standalone settings window |
+| `/ooh settings` | Open the standalone settings window |
+| `/ooh hide` | Hide the warning frames |
+| `/ooh unlock` | Unlock warning frames for repositioning |
+| `/ooh lock` | Lock warning frames in place |
+| `/ooh reset` | Reset warning frame positions |
 | `/ooh instance` | Toggle instance-only mode |
 | `/ooh instance on` | Enable instance-only mode |
 | `/ooh instance off` | Disable instance-only mode for testing |
@@ -136,9 +142,11 @@ World of Warcraft/_retail_/Interface/AddOns/
 
 # Current Development Status
 
-OutOfHealz is currently released and actively maintained.
+OutOfHealz is actively maintained.
 
-Core functionality has been validated through live dungeon and raid testing. Current development is focused on making survivability warnings more actionable through resource-aware recommendations, defensive reminders, and improved configuration and positioning tools.
+Version 2.1.0 expands the addon with clickable Health Potion and Healthstone reminders, a standalone configuration window, minimap launcher, and improved warning-frame positioning and scaling.
+
+Core functionality has been validated through live dungeon and raid testing. Further development will focus on survivability recommendations, defensive reminders, and configuration improvements.
 
 ---
 
@@ -171,8 +179,8 @@ OutOfHealz is intentionally focused on survivability rather than damage optimiza
 
 ## Configuration & Quality of Life
 
-* Automatic warning-frame preview while configuration is open
 * Improved warning frame positioning and customization
+* Native settings warning-frame preview toggle
 * WoW Edit Mode integration research
 * Additional visual customization
 * Individual sound selection and additional sound options
@@ -180,8 +188,6 @@ OutOfHealz is intentionally focused on survivability rather than damage optimiza
 ## Future
 
 * Additional healer positioning information where permitted by the WoW API
-* Standalone configuration window
-* Optional minimap launcher
 * Accessibility presets and additional customization options
 
 ---
